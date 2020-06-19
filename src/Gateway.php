@@ -195,6 +195,18 @@ class Gateway extends WC_Payment_Gateway {
 		if ( WooCommerce::version_compare( '2.0.0', '<' ) ) {
 			$description_prefix = '<br />';
 		}
+		
+		if (1 === sizeof(Plugin::get_config_select_options( $this->payment_method ))) {
+		   $this->form_fields = array(			
+		          'payment'             => array(
+		              'title'       => __( 'Payment Gateway Configuration Not Found. <a href="' . admin_url() . 'post-new.php?post_type=pronamic_gateway">Click here to add.</a>', 'pronamic_ideal' ),
+		          'type'        => 'title',
+		          'description' => '<div class="updated woocommerce-message"><p><b>Payment gateway configuration not found.</b> Kindly add it in Knit Pay gateway configurations page at <a href="' . admin_url() . 'post-new.php?post_type=pronamic_gateway">"Knit Pay >> Configurations"</a> before configuring it in woocommerce.</p></div>',
+		      ),
+		       
+		   );
+		      return;
+		}
 
 		$this->form_fields = array(
 			'enabled'             => array(
@@ -238,6 +250,7 @@ class Gateway extends WC_Payment_Gateway {
 				'type'    => 'select',
 				'default' => get_option( 'pronamic_pay_config_id' ),
 				'options' => Plugin::get_config_select_options( $this->payment_method ),
+			    'description' => 'Configurations can be created in Knit Pay gateway configurations page at <a href="' . admin_url() . 'edit.php?post_type=pronamic_gateway">"Knit Pay >> Configurations"</a>.',
 			),
 			'payment'             => array(
 				'title'       => __( 'Payment Options', 'pronamic_ideal' ),
