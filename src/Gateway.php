@@ -97,8 +97,8 @@ class Gateway extends WC_Payment_Gateway {
 			$this->method_title = sprintf(
 				/* translators: 1: Gateway admin label prefix, 2: Gateway admin label */
 				__( '%1$s - %2$s', 'pronamic_ideal' ),
-				__( 'Pronamic', 'pronamic_ideal' ),
-				PaymentMethods::get_name( $this->payment_method, __( 'Pronamic', 'pronamic_ideal' ) )
+				__( 'Knit Pay', 'pronamic_ideal' ),
+				PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic_ideal' ) )
 			);
 		}
 
@@ -115,7 +115,7 @@ class Gateway extends WC_Payment_Gateway {
 			$this->order_button_text = sprintf(
 				/* translators: %s: payment method title */
 				__( 'Proceed to %s', 'pronamic_ideal' ),
-				PaymentMethods::get_name( $this->payment_method, __( 'Pronamic', 'pronamic_ideal' ) )
+				PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic_ideal' ) )
 			);
 		}
 
@@ -211,7 +211,7 @@ class Gateway extends WC_Payment_Gateway {
 				'title'       => __( 'Title', 'pronamic_ideal' ),
 				'type'        => 'text',
 				'description' => $description_prefix . __( 'This controls the title which the user sees during checkout.', 'pronamic_ideal' ),
-				'default'     => PaymentMethods::get_name( $this->payment_method, __( 'Pronamic', 'pronamic_ideal' ) ),
+				'default'     => PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic_ideal' ) ),
 			),
 			'description'         => array(
 				'title'       => __( 'Description', 'pronamic_ideal' ),

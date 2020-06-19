@@ -158,11 +158,11 @@ class Extension extends AbstractPluginIntegration {
 		return array(
 			array(
 				'id'                 => 'pronamic_pay',
-				'method_title'       => __( 'Pronamic', 'pronamic_ideal' ),
-				'method_description' => __( "This payment method does not use a predefined payment method for the payment. Some payment providers list all activated payment methods for your account to choose from. Use payment method specific gateways (such as 'iDEAL') to let customers choose their desired payment method at checkout.", 'pronamic_ideal' ),
+				'method_title'       => __( 'Knit Pay', 'pronamic_ideal' ),
+				'method_description' => __( "This payment method does not use a predefined payment method for the payment. Some payment providers list all activated payment methods for your account to choose from. Use payment method specific gateways (such as 'Instamojo') to let customers choose their desired payment method at checkout.", 'pronamic_ideal' ),
 				'check_active'       => false,
 			),
-			array(
+			/* array(
 				'id'             => 'pronamic_pay_afterpay',
 				'payment_method' => PaymentMethods::AFTERPAY,
 				'icon'           => $icon_url_base . '/afterpay/method-afterpay-wc-51x32.svg',
@@ -182,14 +182,14 @@ class Extension extends AbstractPluginIntegration {
 				'payment_method' => PaymentMethods::BANCONTACT,
 				'icon'           => $icon_url_base . '/bancontact/method-bancontact-wc-51x32.svg',
 				'check_active'   => false,
-			),
+			), */
 			array(
 				'id'             => 'pronamic_pay_bank_transfer',
 				'payment_method' => PaymentMethods::BANK_TRANSFER,
 				'icon'           => $icon_url_base . '/bank-transfer/method-bank-transfer-wc-51x32.svg',
 				'check_active'   => false,
 			),
-			array(
+			/* array(
 				'id'             => 'pronamic_pay_belfius',
 				'payment_method' => PaymentMethods::BELFIUS,
 				'icon'           => $icon_url_base . '/belfius/method-belfius-wc-51x32.svg',
@@ -203,7 +203,7 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_bunq',
 				'payment_method' => PaymentMethods::BUNQ,
 				'icon'           => $icon_url_base . '/bunq/method-bunq-wc-51x32.svg',
-			),
+			), */
 			array(
 				'id'             => 'pronamic_pay_credit_card',
 				'payment_method' => PaymentMethods::CREDIT_CARD,
@@ -211,7 +211,7 @@ class Extension extends AbstractPluginIntegration {
 				'check_active'   => false,
 				'class'          => __NAMESPACE__ . '\CreditCardGateway',
 			),
-			array(
+			/*array(
 				'id'             => 'pronamic_pay_direct_debit',
 				'payment_method' => PaymentMethods::DIRECT_DEBIT,
 				'icon'           => $icon_url_base . '/direct-debit/method-direct-debit-wc-51x32.svg',
@@ -225,7 +225,6 @@ class Extension extends AbstractPluginIntegration {
 				'form_fields'    => array(
 					'description' => array(
 						'default' => sprintf(
-							/* translators: %s: payment method */
 							__( 'By using this payment method you authorize us via %s to debit payments from your bank account.', 'pronamic_ideal' ),
 							__( 'Bancontact', 'pronamic_ideal' )
 						),
@@ -240,7 +239,6 @@ class Extension extends AbstractPluginIntegration {
 				'form_fields'    => array(
 					'description' => array(
 						'default' => sprintf(
-							/* translators: %s: payment method */
 							__( 'By using this payment method you authorize us via %s to debit payments from your bank account.', 'pronamic_ideal' ),
 							__( 'iDEAL', 'pronamic_ideal' )
 						),
@@ -255,7 +253,6 @@ class Extension extends AbstractPluginIntegration {
 				'form_fields'    => array(
 					'description' => array(
 						'default' => sprintf(
-							/* translators: %s: payment method */
 							__( 'By using this payment method you authorize us via %s to debit payments from your bank account.', 'pronamic_ideal' ),
 							__( 'SOFORT', 'pronamic_ideal' )
 						),
@@ -276,13 +273,13 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_giropay',
 				'payment_method' => PaymentMethods::GIROPAY,
 				'icon'           => $icon_url_base . '/giropay/method-giropay-wc-51x32.svg',
-			),
+			), */
 			array(
 				'id'             => 'pronamic_pay_google_pay',
 				'payment_method' => PaymentMethods::GOOGLE_PAY,
 				'icon'           => $icon_url_base . '/google-pay/method-google-pay-wc-51x32.svg',
 			),
-			array(
+			/* array(
 				'id'             => 'pronamic_pay_gulden',
 				'payment_method' => PaymentMethods::GULDEN,
 				'icon'           => $icon_url_base . '/gulden/method-gulden-wc-51x32.svg',
@@ -317,13 +314,13 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_klarna_pay_later',
 				'payment_method' => PaymentMethods::KLARNA_PAY_LATER,
 				'icon'           => $icon_url_base . '/klarna/method-klarna-wc-51x32.svg',
-			),
+			), */
 			array(
 				'id'             => 'pronamic_pay_maestro',
 				'payment_method' => PaymentMethods::MAESTRO,
 				'icon'           => $icon_url_base . '/meastro/method-meastro-wc-51x32.svg',
 			),
-			array(
+			/* array(
 				'id'             => 'pronamic_pay_payconiq',
 				'payment_method' => PaymentMethods::PAYCONIQ,
 				'icon'           => $icon_url_base . '/payconiq/method-payconiq-wc-51x32.svg',
@@ -337,7 +334,7 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_sofort',
 				'payment_method' => PaymentMethods::SOFORT,
 				'icon'           => $icon_url_base . '/sofort/method-sofort-wc-51x32.svg',
-			),
+			), */
 		);
 	}
 
