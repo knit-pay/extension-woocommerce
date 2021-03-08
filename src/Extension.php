@@ -156,7 +156,16 @@ class Extension extends AbstractPluginIntegration {
 	public static function get_gateways() {
 		$icon_url_base = 'https://cdn.wp-pay.org/jsdelivr.net/npm/@wp-pay/logos@1.6.5/dist/methods';
 
-		return array(
+		$active_payment_methods = PaymentMethods::get_active_payment_methods();
+		$active_gateways        = array();
+		foreach ( $active_payment_methods as $payment_method ) {
+			$active_gateways[] = array(
+				'id'           => 'pronamic_pay_' . $payment_method,
+				'method_title' => PaymentMethods::get_name( $payment_method ),
+			);
+		}
+
+		$pronamic_pay_gateways = array(
 			array(
 				'id'                 => 'pronamic_pay',
 				'method_title'       => __( 'Knit Pay', 'pronamic_ideal' ),
@@ -347,6 +356,7 @@ class Extension extends AbstractPluginIntegration {
 				'icon'           => $icon_url_base . '/sofort/method-sofort-wc-51x32.svg',
 			), */
 		);
+		return wp_parse_args( $pronamic_pay_gateways, $active_gateways );
 	}
 
 	/**
