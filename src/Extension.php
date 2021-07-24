@@ -163,8 +163,9 @@ class Extension extends AbstractPluginIntegration {
 		$active_gateways        = array();
 		foreach ( $active_payment_methods as $payment_method ) {
 			$active_gateways[] = array(
-				'id'           => 'pronamic_pay_' . $payment_method,
-				'method_title' => PaymentMethods::get_name( $payment_method ),
+				'id'             => 'pronamic_pay_' . $payment_method,
+				'payment_method' => $payment_method,
+				'method_title'   => 'Knit Pay - ' . PaymentMethods::get_name( $payment_method ),
 			);
 		}
 
