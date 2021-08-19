@@ -5,7 +5,6 @@ namespace Pronamic\WordPress\Pay\Extensions\WooCommerce;
 use Exception;
 use Pronamic\WordPress\DateTime\DateTime;
 use Pronamic\WordPress\Money\Money;
-use Pronamic\WordPress\Money\TaxedMoney;
 use Pronamic\WordPress\Pay\AbstractPluginIntegration;
 use Pronamic\WordPress\Pay\Core\PaymentMethods;
 use Pronamic\WordPress\Pay\Payments\PaymentStatus;
@@ -187,6 +186,11 @@ class Extension extends AbstractPluginIntegration {
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::ALIPAY, $icon_size ),
 			),
 			array(
+				'id'             => 'pronamic_pay_american_express',
+				'payment_method' => PaymentMethods::AMERICAN_EXPRESS,
+				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::AMERICAN_EXPRESS, $icon_size ),
+			),
+			array(
 				'id'             => 'pronamic_pay_apple_pay',
 				'payment_method' => PaymentMethods::APPLE_PAY,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::APPLE_PAY, $icon_size ),
@@ -335,6 +339,11 @@ class Extension extends AbstractPluginIntegration {
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::MAESTRO, $icon_size ),
 			),
 			/* array(
+				'id'             => 'pronamic_pay_mastercard',
+				'payment_method' => PaymentMethods::MASTERCARD,
+				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::MASTERCARD, $icon_size ),
+			),
+			array(
 				'id'             => 'pronamic_pay_payconiq',
 				'payment_method' => PaymentMethods::PAYCONIQ,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::PAYCONIQ, $icon_size ),
@@ -360,12 +369,24 @@ class Extension extends AbstractPluginIntegration {
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::SOFORT, $icon_size ),
 			),
 			array(
+				'id'             => 'pronamic_pay_spraypay',
+				'payment_method' => PaymentMethods::SPRAYPAY,
+			),
+			array(
 				'id'             => 'pronamic_pay_swish',
 				'payment_method' => PaymentMethods::SWISH,
 			),
 			array(
+				'id'             => 'pronamic_pay_v_pay',
+				'payment_method' => PaymentMethods::V_PAY,
+			),
+			array(
 				'id'             => 'pronamic_pay_vipps',
 				'payment_method' => PaymentMethods::VIPPS,
+			),
+			array(
+				'id'             => 'pronamic_pay_visa',
+				'payment_method' => PaymentMethods::VISA,
 			), */
 		);
 		return wp_parse_args( $pronamic_pay_gateways, $active_gateways );
@@ -826,7 +847,7 @@ class Extension extends AbstractPluginIntegration {
 							Core_Util::to_period( (string) WooCommerce::get_subscription_product_trial_period( $product ) )
 						)
 					),
-					new TaxedMoney( 0, WooCommerce::get_currency() )
+					new Money( 0, WooCommerce::get_currency() )
 				);
 
 				$trial_phase->set_total_periods( 1 );
@@ -848,7 +869,7 @@ class Extension extends AbstractPluginIntegration {
 						Core_Util::to_period( (string) WooCommerce::get_subscription_product_period( $product ) )
 					)
 				),
-				new TaxedMoney( $wcs_subscription->get_total(), WooCommerce::get_currency() )
+				new Money( $wcs_subscription->get_total(), WooCommerce::get_currency() )
 			);
 
 			$product_length = (int) WooCommerce::get_subscription_product_length( $product );
