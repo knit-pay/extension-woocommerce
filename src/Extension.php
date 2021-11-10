@@ -162,9 +162,9 @@ class Extension extends AbstractPluginIntegration {
 		$active_gateways        = array();
 		foreach ( $active_payment_methods as $payment_method ) {
 			$active_gateways[] = array(
-				'id'             => 'pronamic_pay_' . $payment_method,
+				'id'           => 'pronamic_pay_' . $payment_method,
 				//'payment_method' => $payment_method, // TODO if we add this, checkout page starts showing pay with Knit Pay. and if we remove it, configuration start showing all the configuration.
-				'method_title'   => 'Knit Pay - ' . PaymentMethods::get_name( $payment_method ),
+				'method_title' => 'Knit Pay - ' . PaymentMethods::get_name( $payment_method ),
 			);
 		}
 
