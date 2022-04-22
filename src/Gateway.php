@@ -278,7 +278,7 @@ class Gateway extends WC_Payment_Gateway {
 				'title'       => __( 'Title', 'pronamic_ideal' ),
 				'type'        => 'text',
 				'description' => $description_prefix . __( 'This controls the title which the user sees during checkout.', 'pronamic_ideal' ),
-				'default'     => PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic_ideal' ) ),
+				'default'     => PaymentMethods::get_name( $this->payment_method, __( 'Pay Online', 'pronamic_ideal' ) ),
 			),
 			'description'         => array(
 				'title'       => __( 'Description', 'pronamic_ideal' ),
