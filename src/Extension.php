@@ -195,13 +195,20 @@ class Extension extends AbstractPluginIntegration {
 		$icon_size = 'wc-51x32';
 
 		$active_payment_methods = PaymentMethods::get_active_payment_methods();
-		$active_gateways        = array();
+		$active_gateways        = [];
 		foreach ( $active_payment_methods as $payment_method ) {
-			$active_gateways[] = array(
-				'id'           => 'pronamic_pay_' . $payment_method,
-				//'payment_method' => $payment_method, // TODO if we add this, checkout page starts showing pay with Knit Pay. and if we remove it, configuration start showing all the configuration.
-				'method_title' => 'Knit Pay - ' . PaymentMethods::get_name( $payment_method ),
-			);
+			if ( in_array( 
+				'pronamic_pay_' . $payment_method, 
+				[ 'pronamic_pay_bank_transfer', 'pronamic_pay_credit_card', 'pronamic_pay_google_pay', 'pronamic_pay_maestro' ]
+			)
+			) {
+				continue;
+			}
+			$active_gateways[] = [
+				'id'             => 'pronamic_pay_' . $payment_method,
+				'payment_method' => null, // TODO if we add this, checkout page starts showing pay with Knit Pay. and if we remove it, configuration start showing all the configuration.
+				'method_title'   => 'Knit Pay - ' . PaymentMethods::get_name( $payment_method ),
+			];
 		}
 
 		$pronamic_pay_gateways = array(
@@ -377,7 +384,7 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_klarna_pay_later',
 				'payment_method' => PaymentMethods::KLARNA_PAY_LATER,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::KLARNA_PAY_LATER, $icon_size ),
-			), */
+			),
 			array(
 				'id'             => 'pronamic_pay_klarna_pay_now',
 				'payment_method' => PaymentMethods::KLARNA_PAY_NOW,
@@ -387,7 +394,7 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_klarna_pay_over_time',
 				'payment_method' => PaymentMethods::KLARNA_PAY_OVER_TIME,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::KLARNA_PAY_OVER_TIME, $icon_size ),
-			),
+			), */
 			array(
 				'id'             => 'pronamic_pay_maestro',
 				'payment_method' => PaymentMethods::MAESTRO,
