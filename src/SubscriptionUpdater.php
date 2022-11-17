@@ -71,7 +71,7 @@ class SubscriptionUpdater {
 		if (
 			\array_key_exists( $payment_method, $available_gateways )
 				&&
-			\is_callable( array( $available_gateways[ $payment_method ], 'get_wp_payment_method' ) )
+			\is_callable( [ $available_gateways[ $payment_method ], 'get_wp_payment_method' ] )
 		) {
 			$payment_method = $available_gateways[ $payment_method ]->get_wp_payment_method();
 
@@ -94,7 +94,7 @@ class SubscriptionUpdater {
 		);
 
 		// Phases.
-		$pronamic_subscription->set_phases( array() );
+		$pronamic_subscription->set_phases( [] );
 
 		/**
 		 * Trial period.
@@ -102,7 +102,13 @@ class SubscriptionUpdater {
 		$trial_period = $woocommerce_subscription->get_trial_period();
 
 		if ( '' !== $trial_period ) {
-			$trial_end_date = new \DateTimeImmutable( $woocommerce_subscription->get_date( 'trial_end', 'gmt' ), new \DateTimeZone( 'GMT' ) );
+			$trial_end = $woocommerce_subscription->get_date( 'trial_end', 'gmt' );
+
+			if ( empty( $trial_end ) && $woocommerce_subscription->meta_exists( 'trial_end_pre_cancellation' ) ) {
+				$trial_end = $woocommerce_subscription->get_meta( 'trial_end_pre_cancellation' );
+			}
+
+			$trial_end_date = new \DateTimeImmutable( $trial_end, new \DateTimeZone( 'GMT' ) );
 
 			$interval_start_date = $start_date->setTime( $start_date->format( 'H' ), $start_date->format( 'i' ) );
 			$interval_end_date   = $trial_end_date->setTime( $trial_end_date->format( 'H' ), $trial_end_date->format( 'i' ) );
@@ -181,6 +187,14 @@ class SubscriptionUpdater {
 	 * @return void
 	 */
 	public static function maybe_update_pronamic_subscription( $post_id ) {
+		if ( 'shop_subscription' !== \get_post_type( $post_id ) ) {
+			return;
+		}
+
+		if ( ! \function_exists( '\wcs_get_subscription' ) ) {
+			return;
+		}
+
 		// Get WooCommerce subscription.
 		$woocommerce_subscription = \wcs_get_subscription( $post_id );
 
