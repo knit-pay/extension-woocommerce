@@ -782,6 +782,7 @@ class Gateway extends WC_Payment_Gateway {
 		$woocommerce_subscriptions = \wcs_get_subscriptions_for_order( $order );
 
 		foreach ( $woocommerce_subscriptions as $woocommerce_subscription ) {
+			// Added by Knit Pay. Don't create subscription if manual payment option is on.
 			if( $woocommerce_subscription->is_manual() ){
 				continue;
 			}
