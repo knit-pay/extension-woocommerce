@@ -3,7 +3,7 @@
  * WooCommerce
  *
  * @author    Pronamic <info@pronamic.eu>
- * @copyright 2005-2022 Pronamic
+ * @copyright 2005-2023 Pronamic
  * @license   GPL-3.0-or-later
  * @package   Pronamic\WordPress\Pay\Extensions\WooCommerce
  */
@@ -21,7 +21,7 @@ use WP_Term;
 /**
  * Title: WooCommerce
  * Description:
- * Copyright: 2005-2022 Pronamic
+ * Copyright: 2005-2023 Pronamic
  * Company: Pronamic
  *
  * @author  Remco Tolsma
@@ -1030,5 +1030,28 @@ class WooCommerce {
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * WooCommerce order item tax rate ID.
+	 *
+	 * @link https://github.com/pronamic/wp-pronamic-pay-woocommerce/wiki/WooCommerce-order-item-tax-percent
+	 * @param WC_Order_Item $order_item WooCommerce order item.
+	 * @return int|null
+	 */
+	public static function get_order_item_tax_rate_id( WC_Order_Item $order_item ) {
+		$taxes = $order_item->get_taxes();
+
+		$rates = \reset( $taxes );
+
+		if ( false === $rates ) {
+			return null;
+		}
+
+		if ( \count( $rates ) > 1 ) {
+			return null;
+		}
+
+		return \array_key_first( $rates );
 	}
 }

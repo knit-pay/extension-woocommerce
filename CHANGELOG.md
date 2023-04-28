@@ -7,6 +7,92 @@ This projects adheres to [Semantic Versioning](http://semver.org/) and [Keep a C
 ## [Unreleased][unreleased]
 -
 
+## [4.5.5] - 2023-03-30
+
+### Commits
+
+- Fixed refunded amount check. ([e41c3ea](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/e41c3ea9b2dcb1bbed0de4be6608c9831bd458ba))
+
+Full set of changes: [`4.5.4...4.5.5`][4.5.5]
+
+[4.5.5]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.4...v4.5.5
+
+## [4.5.4] - 2023-03-29
+### Changed
+
+- Extended support for refunds.
+
+### Composer
+
+- Changed `wp-pay/core` from `^4.6` to `v4.9.0`.
+	Release notes: https://github.com/pronamic/wp-pay-core/releases/tag/v4.9.0
+Full set of changes: [`4.5.3...4.5.4`][4.5.4]
+
+[4.5.4]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.3...v4.5.4
+
+## [4.5.3] - 2023-03-13
+
+### Commits
+
+- Set composer package type to "wordpress-plugin". ([2231633](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/22316332ee79d5c6333cc94a588658607f33f34b))
+- Set tax percentage for free shipping items. ([61fe876](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/61fe876bf2d2d9d70435148cb027eb3a6c485cee))
+- Updated .gitattributes ([a6076ad](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/a6076ad38523537a2aa50e41a45cf82325af657f))
+
+Full set of changes: [`4.5.2...4.5.3`][4.5.3]
+
+[4.5.3]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.2...v4.5.3
+
+## [4.5.2] - 2023-02-07
+### Changed
+
+- Improved default integration arguments. ([cd7aa3c](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/cd7aa3c9300a21b2c5e72326953f8320e56900c0))
+
+
+Full set of changes: [`4.5.1...4.5.2`][4.5.2]
+
+[4.5.2]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.1...v4.5.2
+
+## [4.5.1] - 2023-01-31
+### Composer
+
+- Changed `php` from `>=8.0` to `>=7.4`.
+Full set of changes: [`4.5.0...4.5.1`][4.5.1]
+
+[4.5.1]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.0...v4.5.1
+
+## [4.5.0] - 2023-01-18
+### Changed
+
+- Improved support for authorized (afterpay) payments.
+
+### Commits
+
+- Set tax percentage if we there is just 1 tax rate. ([4884116](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/4884116bad3d860d944646bbf4dc6603c5448dd1))
+- Happy 2023. ([bb5c112](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/bb5c1128d95c5b829e58058651424cbf8861b516))
+
+Full set of changes: [`4.4.0...4.5.0`][4.5.0]
+
+[4.5.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.4.0...v4.5.0
+
+## [4.4.0] - 2022-12-23
+
+### Commits
+
+- Added new Riverty gateway. ([a4fd8ff](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/a4fd8fff41870cf88e03edd64b88f3e141ca115a))
+- Added "Requires Plugins" header. ([bf5c03a](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/bf5c03a2fbd44a0fa6d717e679a5c2f3e2086d09))
+
+### Composer
+
+- Changed `php` from `>=5.6.20` to `>=8.0`.
+- Changed `wp-pay/core` from `^4.5` to `v4.6.0`.
+	Release notes: https://github.com/pronamic/wp-pay-core/releases/tag/v4.3.3
+Full set of changes: [`4.3.3...4.4.0`][4.4.0]
+
+[4.4.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.3.3...v4.4.0
+
+## [4.3.3] - 2022-11-29
+- Fix creating zero amount refunds. [#31](https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/31)
+
 ## [4.3.2] - 2022-11-09
 - Fixed "Fatal error: Uncaught Error: Call to undefined function wcs_get_subscriptions_for_order()". [#29](https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/29)
 
@@ -246,7 +332,8 @@ This projects adheres to [Semantic Versioning](http://semver.org/) and [Keep a C
 ## 1.0.0 - 2014-12-19
 - First release.
 
-[unreleased]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/4.3.2...HEAD
+[unreleased]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/4.3.3...HEAD
+[4.3.3]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/4.3.2...4.3.3
 [4.3.2]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/4.3.1...4.3.2
 [4.3.1]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/4.3.0...4.3.1
 [4.3.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/4.2.0...4.3.0

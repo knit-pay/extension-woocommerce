@@ -3,7 +3,7 @@
  * Bootstrap tests
  *
  * @author    Pronamic <info@pronamic.eu>
- * @copyright 2005-2022 Pronamic
+ * @copyright 2005-2023 Pronamic
  * @license   GPL-3.0-or-later
  * @package   Pronamic\WordPress\Pay\Extensions\WooCommerce
  */
@@ -21,8 +21,8 @@ function _manually_load_plugin() {
 	global $pronamic_ideal;
 
 	// Load WooCommerce and WooCommerce Subscriptions.
-	require dirname( __FILE__ ) . '/../wp-content/plugins/woocommerce/woocommerce.php';
-	require dirname( __FILE__ ) . '/../wp-content/plugins/woocommerce-subscriptions/woocommerce-subscriptions.php';
+	require __DIR__ . '/../wp-content/plugins/woocommerce/woocommerce.php';
+	require __DIR__ . '/../wp-content/plugins/woocommerce-subscriptions/woocommerce-subscriptions.php';
 
 	$pronamic_ideal = pronamic_pay_plugin();
 }

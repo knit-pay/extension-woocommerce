@@ -3,7 +3,7 @@
  * Extension
  *
  * @author    Pronamic <info@pronamic.eu>
- * @copyright 2005-2022 Pronamic
+ * @copyright 2005-2023 Pronamic
  * @license   GPL-3.0-or-later
  * @package   Pronamic\WordPress\Pay\Extensions\WooCommerce
  */
@@ -12,7 +12,6 @@ namespace Pronamic\WordPress\Pay\Extensions\WooCommerce;
 
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Exception;
-use Pronamic\WordPress\Money\Money;
 use Pronamic\WordPress\Pay\AbstractPluginIntegration;
 use Pronamic\WordPress\Pay\Core\PaymentMethods;
 use Pronamic\WordPress\Pay\Payments\Payment;
@@ -21,12 +20,13 @@ use Pronamic\WordPress\Pay\Plugin;
 use Pronamic\WordPress\Pay\Subscriptions\Subscription;
 use Pronamic\WordPress\Pay\Util as Pay_Util;
 use WC_Order;
+use WC_Order_Item;
 use WC_Payment_Gateway;
 
 /**
  * Title: WooCommerce iDEAL Add-On
  * Description:
- * Copyright: 2005-2022 Pronamic
+ * Copyright: 2005-2023 Pronamic
  * Company: Pronamic
  *
  * @author  Remco Tolsma
@@ -48,7 +48,13 @@ class Extension extends AbstractPluginIntegration {
 	 * @return void
 	 */
 	public function __construct( $args = [] ) {
-		$args['name'] = __( 'WooCommerce', 'pronamic_ideal' );
+		$args = wp_parse_args(
+			$args,
+			[
+				'name'                => \__( 'WooCommerce', 'pronamic_ideal' ),
+				'version_option_name' => 'pronamic_pay_woocommerce_version',
+			]
+		);
 
 		parent::__construct( $args );
 
@@ -86,7 +92,7 @@ class Extension extends AbstractPluginIntegration {
 		add_filter( 'woocommerce_payment_gateways', [ __CLASS__, 'payment_gateways' ] );
 
 		add_filter( 'woocommerce_thankyou_order_received_text', [ __CLASS__, 'woocommerce_thankyou_order_received_text' ], 20, 2 );
-		
+
 		\add_action( 'before_woocommerce_pay', [ $this, 'maybe_add_failure_reason_notice' ] );
 
 		\add_action( 'pronamic_pay_update_payment', [ $this, 'maybe_update_refunded_payment' ], 15, 1 );
@@ -100,6 +106,13 @@ class Extension extends AbstractPluginIntegration {
 		 * @link https://github.com/woocommerce/woocommerce-gutenberg-products-block/blob/trunk/docs/extensibility/payment-method-integration.md
 		 */
 		\add_action( 'woocommerce_blocks_payment_method_type_registration', [ __CLASS__, 'blocks_payment_method_type_registration' ] );
+
+		/**
+		 * WooCommerce order status completed.
+		 * 
+		 * @link https://github.com/pronamic/wp-pronamic-pay-mollie/issues/18#issuecomment-1373362874
+		 */
+		\add_action( 'woocommerce_order_status_completed', [ $this, 'trigger_payment_fulfilled_action' ], 10, 2 );
 	}
 
 	/**
@@ -425,6 +438,11 @@ class Extension extends AbstractPluginIntegration {
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::PRZELEWY24, $icon_size ),
 			],
 			[
+				'id'             => 'pronamic_pay_riverty',
+				'payment_method' => PaymentMethods::RIVERTY,
+				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::RIVERTY, $icon_size ),
+			],
+			[
 				'id'             => 'pronamic_pay_santander',
 				'payment_method' => PaymentMethods::SANTANDER,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::SANTANDER, $icon_size ),
@@ -683,6 +701,13 @@ class Extension extends AbstractPluginIntegration {
 		}
 
 		/**
+		 * Authorized payment.
+		 */
+		if ( PaymentStatus::AUTHORIZED === $payment->get_status() ) {
+			$new_status = WooCommerce::ORDER_STATUS_PROCESSING;
+		}
+
+		/**
 		 * Add note and update status.
 		 */
 		$order->add_order_note( $note );
@@ -746,7 +771,7 @@ class Extension extends AbstractPluginIntegration {
 		// Check refunded amount.
 		$refunded_amount = $payment->get_refunded_amount();
 
-		if ( null === $refunded_amount ) {
+		if ( $refunded_amount->get_value() <= 0 ) {
 			return;
 		}
 
@@ -762,48 +787,74 @@ class Extension extends AbstractPluginIntegration {
 			return;
 		}
 
-		// Check updated refund amount.
-		$wc_refunded_amount = (float) $order->get_meta( '_pronamic_amount_refunded', true );
+		foreach ( $payment->refunds as $refund ) {
+			if ( \array_key_exists( 'woocommerce_order_id', $refund->meta ) ) {
+				continue;
+			}
 
-		$refunded_value = $refunded_amount->get_value();
+			if ( \array_key_exists( 'woocommerce_order_error_message', $refund->meta ) ) {
+				continue;
+			}
 
-		if ( $wc_refunded_amount === $refunded_value ) {
-			return;
-		}
+			$lines_items = [];
 
-		// Create WooCommerce refund.
-		$amount_difference = $refunded_amount->subtract( new Money( $wc_refunded_amount, $refunded_amount->get_currency() ) );
+			foreach ( $refund->lines as $refund_line ) {
+				$payment_line = $refund_line->get_payment_line();
 
-		try {
-			\wc_create_refund(
+				if ( null === $payment_line ) {
+					continue;
+				}
+
+				$wc_order_item_id = $payment_line->meta['woocommerce_order_item_id'];
+
+				$wc_order_item = $order->get_item( $wc_order_item_id );
+
+				$refund_tax = [];
+
+				$tax_amount  = $refund_line->get_tax_amount();
+				$tax_rate_id = $wc_order_item instanceof WC_Order_Item ? WooCommerce::get_order_item_tax_rate_id( $wc_order_item ) : null;
+
+				if ( null !== $tax_amount && null !== $tax_rate_id ) {
+					$refund_tax[ $tax_rate_id ] = $tax_amount->get_value();
+				}
+
+				$lines_items[ $wc_order_item_id ] = [
+					'qty'          => $refund_line->get_quantity()->to_int(),
+					'refund_total' => $refund_line->get_total_amount()->get_value(),
+					'refund_tax'   => $refund_tax,
+				];
+			}
+
+			$result = \wc_create_refund(
 				[
-					'amount'   => $amount_difference->get_value(),
-					'order_id' => $order->get_id(),
+					'amount'         => $refund->get_amount()->get_value(),
+					'reason'         => $refund->get_description(),
+					'order_id'       => $order->get_id(),
+					'refund_id'      => $refund->psp_id,
+					'line_items'     => $lines_items,
+					'refund_payment' => false,
+					'restock_items'  => true,
 				]
 			);
 
-			$order->update_meta_data( '_pronamic_amount_refunded', (string) $refunded_amount->get_value() );
+			if ( \is_wp_error( $result ) ) {
+				$error_message = $result->get_error_message();
 
-			$order->save();
+				$refund->meta['woocommerce_order_error_message'] = $error_message;
 
-			// Add order note.
-			$note = \sprintf(
-				/* translators: 1: refund amount, 2: edit payment url, 3: payment ID */
-				__( 'Added refund of %1$s for updated <a href="%2$s" title="Payment #%3$d">payment #%3$d</a>.' ),
-				$amount_difference->format_i18n(),
-				$payment->get_edit_payment_url(),
-				$payment->get_id()
-			);
+				$payment->add_note(
+					\sprintf(
+						/* translators: 1: Refund PSP ID, 2: error message */
+						\__( 'Unable to create WooCommerce refund for "%1$s", due to the following error: "%2$s".', 'pronamic_ideal' ),
+						$refund->psp_id,
+						$error_message
+					)
+				);
 
-			$order->add_order_note( $note );
-		} catch ( \Exception $e ) {
-			$payment->add_note(
-				\sprintf(
-					/* translators: %s: error message */
-					\__( 'Unable to create WooCommerce refund: %s', 'pronamic_ideal' ),
-					\esc_html( $e->getMessage() )
-				)
-			);
+				continue;
+			}
+
+			$refund->meta['woocommerce_order_id'] = $result->get_id();
 		}
 	}
 
@@ -1144,11 +1195,11 @@ class Extension extends AbstractPluginIntegration {
 		];
 
 		foreach ( $fields as $field_id => $meta_key ) {
-			if ( ! filter_has_var( INPUT_POST, $field_id ) ) {
+			if ( ! \array_key_exists( $field_id, $posted ) ) {
 				continue;
 			}
 
-			$meta_value = filter_input( INPUT_POST, $field_id, FILTER_SANITIZE_STRING );
+			$meta_value = $posted[ $field_id ];
 
 			update_post_meta( $order_id, $meta_key, $meta_value );
 		}
@@ -1233,7 +1284,7 @@ class Extension extends AbstractPluginIntegration {
 		$text .= sprintf(
 			'<a href="%s">%s</a>',
 			get_edit_post_link( $source_id ),
-			/* translators: %s: order number */
+			/* translators: %s: subscription source */
 			sprintf( __( 'Subscription %s', 'pronamic_ideal' ), $order_number )
 		);
 
@@ -1262,5 +1313,36 @@ class Extension extends AbstractPluginIntegration {
 	 */
 	public static function subscription_source_url( $url, Subscription $subscription ) {
 		return get_edit_post_link( (int) $subscription->source_id );
+	}
+
+	/**
+	 * Trigger payment fulfilled action.
+	 * 
+	 * @link https://github.com/woocommerce/woocommerce/blob/4927a2e41203b0f84692e46ca082fdb1d3040d4c/plugins/woocommerce/includes/class-wc-order.php#L387
+	 * @param int      $order_id Order ID.
+	 * @param WC_Order $order    Order.
+	 * @return void
+	 */
+	public function trigger_payment_fulfilled_action( $order_id, $order ) {
+		$payment_id = (int) $order->get_meta( '_pronamic_payment_id' );
+
+		if ( 0 === $payment_id ) {
+			return;
+		}
+
+		$payment = \get_pronamic_payment( $payment_id );
+
+		if ( null === $payment ) {
+			return;
+		}
+
+		/**
+		 * Payment fulfilled.
+		 * 
+		 * @ignore Private action for now.
+		 * @param Payment $payment Payment.
+		 * @link https://github.com/pronamic/wp-pronamic-pay-mollie/issues/18#issuecomment-1373362874
+		 */
+		\do_action( 'pronamic_pay_payment_fulfilled', $payment );
 	}
 }

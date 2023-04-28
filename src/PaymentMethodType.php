@@ -3,7 +3,7 @@
  * Payment method type
  *
  * @author    Pronamic <info@pronamic.eu>
- * @copyright 2005-2022 Pronamic
+ * @copyright 2005-2023 Pronamic
  * @license   GPL-3.0-or-later
  * @package   Pronamic\WordPress\Pay\Extensions\WooCommerce
  */
@@ -30,7 +30,7 @@ use Pronamic\WordPress\Pay\Core\Util;
 class PaymentMethodType extends AbstractPaymentMethodType {
 	/**
 	 * Flag to track if the inline script was added.
-	 * 
+	 *
 	 * @var bool
 	 */
 	private $added_inline_script = false;
