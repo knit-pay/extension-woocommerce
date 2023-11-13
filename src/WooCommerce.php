@@ -10,6 +10,7 @@
 
 namespace Pronamic\WordPress\Pay\Extensions\WooCommerce;
 
+use Pronamic\WordPress\Html\Element;
 use WC_Order;
 use WC_Order_Item;
 use WC_Order_Item_Product;
@@ -168,8 +169,8 @@ class WooCommerce {
 	/**
 	 * Add notice.
 	 *
-	 * @param string $message
-	 * @param string $type
+	 * @param string $message Message.
+	 * @param string $type    Type.
 	 * @return void
 	 */
 	public static function add_notice( $message, $type = 'success' ) {
@@ -222,9 +223,7 @@ class WooCommerce {
 	 * Get order status.
 	 *
 	 * @since 1.2.1
-	 *
-	 * @param WC_Order $order
-	 *
+	 * @param WC_Order $order Order.
 	 * @return string
 	 */
 	public static function order_get_status( $order ) {
@@ -1015,18 +1014,31 @@ class WooCommerce {
 
 		// Get checkout fields.
 		foreach ( \WC()->checkout()->get_checkout_fields() as $fieldset_key => $fieldset ) {
-			$fields[ $fieldset_key ] = [
-				'name'    => ucfirst( $fieldset_key ),
-				'options' => [],
-			];
+			$optgroup = new Element(
+				'optgroup',
+				[
+					'label' => \ucfirst( $fieldset_key ),
+				]
+			);
 
 			foreach ( $fieldset as $field_key => $field ) {
 				if ( empty( $field['label'] ) || strstr( $field_key, 'password' ) ) {
 					continue;
 				}
 
-				$fields[ $fieldset_key ]['options'][ $field_key ] = (string) $field['label'];
+				$option = new Element(
+					'option',
+					[
+						'value' => $field_key,
+					]
+				);
+
+				$option->children[] = (string) $field['label'];
+
+				$optgroup->children[] = $option;
 			}
+
+			$fields[] = $optgroup;
 		}
 
 		return $fields;
@@ -1040,6 +1052,10 @@ class WooCommerce {
 	 * @return int|null
 	 */
 	public static function get_order_item_tax_rate_id( WC_Order_Item $order_item ) {
+		if ( ! \method_exists( $order_item, 'get_taxes' ) ) {
+			return null;
+		}
+
 		$taxes = $order_item->get_taxes();
 
 		$rates = \reset( $taxes );

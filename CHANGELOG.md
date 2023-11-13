@@ -7,6 +7,121 @@ This projects adheres to [Semantic Versioning](http://semver.org/) and [Keep a C
 ## [Unreleased][unreleased]
 -
 
+## [4.6.3] - 2023-11-06
+
+### Changed
+
+- Meta box HPOS compat. ([ed25f45](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/ed25f45c677f3001cb43ef867feae24e31eea85c))
+- Added gateway settings field default value (fixes #62). ([d67e020](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/d67e020da8f5c797a088bc4d1505f3c9f2dadb88))
+
+Full set of changes: [`4.6.2...4.6.3`][4.6.3]
+
+[4.6.3]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.6.2...v4.6.3
+
+## [4.6.2] - 2023-10-30
+
+### Changed
+
+- Improved escaping of some HTML elements.
+- Added some missing `if ( ! defined( 'ABSPATH' ) )` statements.
+
+### Composer
+
+- Added `pronamic/wp-html` `^2.2`.
+
+Full set of changes: [`4.6.1...4.6.2`][4.6.2]
+
+[4.6.2]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.6.1...v4.6.2
+
+## [4.6.1] - 2023-10-18
+
+### Fixed
+
+- The `4.2.0` upgrade script for WooCommerce Subscriptions will now only schedule it's actions when WooCommerce Subscriptions is running. ([60](https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/60))
+- When paying for subscriptions via Mollie that are manually renewed, the payment is no longer marked to Mollie as a first payment for obtaining a mandate. This makes it possible to also use the Mollie bank transfer payment method to pay for subscriptions that are manually renewed. ([58](https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/58))
+
+Full set of changes: [`4.6.0...4.6.1`][4.6.1]
+
+[4.6.1]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.6.0...v4.6.1
+
+## [4.6.0] - 2023-10-13
+
+### Added
+
+- Added Pronamic Pay meta box on the WooCommerce admin order page.
+- Added Pronamic Pay meta box on the WooCommerce Subscriptions admin subscription page.
+- Added/improved support for the WooCommerce Subscriptions change payment method feature.
+
+### Changed
+
+- Updated to latest Pronamic coding standards. ([cdf4b84](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/cdf4b84c962cd9577a5eca208eea03ff7cac2983))
+- Only set order status to pending payment if order still needs payment and order status is not already pending. ([7892e23](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/7892e239bc22eacd53f67b4dc5e62688be0cdab3))
+
+### Fixed
+
+- HTML is no longer allowed in the WooCommerce thank you order received text. ([cf5ae1b](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/cf5ae1b9faa1c6303b1b15bda7cfae8b901f39b2))
+
+Full set of changes: [`4.5.9...4.6.0`][4.6.0]
+
+[4.6.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.9...v4.6.0
+
+## [4.5.9] - 2023-09-11
+
+### Commits
+
+- Fixed spelling. ([e701e56](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/e701e568d45ce858ca5b5572de404a67e8da919a))
+
+Full set of changes: [`4.5.8...4.5.9`][4.5.9]
+
+[4.5.9]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.8...v4.5.9
+
+## [4.5.8] - 2023-08-23
+
+### Commits
+
+- Fixed some WPCS 3 warnings. ([4d7729a](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/4d7729a32ab77de56139fa068a98c7675232e70a))
+
+Full set of changes: [`4.5.7...4.5.8`][4.5.8]
+
+[4.5.8]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.7...v4.5.8
+
+## [4.5.7] - 2023-07-12
+
+### Commits
+
+- Simplify connecting subscription on WooCommerce payment method change. ([37a7f78](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/37a7f78b335d6d2d8f7e47ff8215b1fc08143d58))
+- Added subscription to payment on payment method change. ([5628f74](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/5628f74cd24f162bfacc3b649f6a233dd5c34608))
+- Updated subscription on `woocommerce_update_subscription` action instead of `save_post`. ([8e93806](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/8e93806f333a6e2d51412f31b792ce12b403174d))
+- Updated order meta instead of post meta on checkout. ([360cacc](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/360caccce8ec875b7ee2d0ae482d66c2082877ff))
+- Updated subscription source text to use WooCommerce Subscriptions edit post link and order number. ([d74ce20](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/d74ce205746cec3c85329d7b75e9166491838ae8))
+- Use order methods for edit URL and number in source text. ([f0eb04b](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/f0eb04b9f39ed0f8d2f1338bceace2f79065ae19))
+- Use order edit URL as source URL. ([ae9d4b8](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/ae9d4b8009a83be1ea275455a530f18c87631050))
+- First add phase and then override next payment date. ([133a5ad](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/133a5ad1dcb7a2f95d9b7c6f11926059f9445ef3))
+- Added Billie gateway. ([40f8385](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/40f83854b4130133dbab9980330ba9c82e7f9195))
+- WooCommerce Subscriptions don't have period information within the renewal orders. ([96228ef](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/96228ef07331243892d20e827a91756732cc1cb8))
+- Connect first subscription period to payment. ([4211a28](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/4211a28dbd92c7e62ea3ae2751c8aad1969baf24))
+- Use 'start' instead of 'date_created' to fix difference in seconds. ([b04c293](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/b04c29300f634e9a1a5d8f472821c9ebc50558e9))
+- Use new `get_current_period` function, we should not advance the subscription to a next period. ([fc0e71f](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/fc0e71f8587fd2ef06bcebc78aaf238621fb96ab))
+- Set customer from WooCommerce subscription order. ([bb97664](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/bb97664ffcf80d069c51f762d03aa1f7e4911e4e))
+- Updated subscription lines from WooCommerce subscription order. ([3d40213](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/3d40213ebf44792524b80423994471335981b690))
+- Use an order helper class to retrieve/build the payment lines from a WooCommerce order. ([5bf96f1](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/5bf96f1e6e0a98625e486ef24c006ac5ee43c298))
+
+Full set of changes: [`4.5.6...4.5.7`][4.5.7]
+
+[4.5.7]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.6...v4.5.7
+
+## [4.5.6] - 2023-06-01
+
+### Commits
+
+- Switch from `pronamic/wp-deployer` to `pronamic/pronamic-cli`. ([9d434ab](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/9d434ab09900bb64afbcab9e2106548072d2af73))
+- Complete payment for order when payment is authorized. ([798f345](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/798f3452c0ee04afe45cf7fb0dd96c84c2f719f1))
+- Updated .gitattributes ([542633c](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/542633cdbc7d32c1a71716ac20c1699616c581b1))
+
+Full set of changes: [`4.5.5...4.5.6`][4.5.6]
+
+[4.5.6]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.5.5...v4.5.6
+
 ## [4.5.5] - 2023-03-30
 
 ### Commits

@@ -17,6 +17,9 @@ use Pronamic\WordPress\Pay\Subscriptions\SubscriptionInterval;
 use Pronamic\WordPress\Pay\Subscriptions\SubscriptionPhase;
 use WC_Subscription;
 
+/**
+ * Subscription updater class
+ */
 class SubscriptionUpdater {
 	/**
 	 * WooCommerce subscription.
@@ -56,7 +59,7 @@ class SubscriptionUpdater {
 		$pronamic_subscription->status = WooCommerceSubscriptionStatus::from_subscription( $woocommerce_subscription )->to_pronamic_status();
 
 		// Date.
-		$start_date = new \DateTimeImmutable( $woocommerce_subscription->get_date( 'date_created', 'gmt' ), new \DateTimeZone( 'GMT' ) );
+		$start_date = new \DateTimeImmutable( $woocommerce_subscription->get_date( 'start', 'gmt' ), new \DateTimeZone( 'GMT' ) );
 
 		$pronamic_subscription->date = $start_date;
 
@@ -80,11 +83,6 @@ class SubscriptionUpdater {
 			}
 		}
 
-		// Do not update subscription phases when payment method is updated only.
-		if ( \did_action( 'woocommerce_subscription_change_payment_method_via_pay_shortcode' ) ) {
-			return;
-		}
-
 		// Description.
 		$pronamic_subscription->set_description(
 			sprintf(
@@ -92,6 +90,12 @@ class SubscriptionUpdater {
 				$woocommerce_subscription->get_id()
 			)
 		);
+
+		// Order helper.
+		$order_helper = new OrderHelper( $woocommerce_subscription );
+
+		// Customer.
+		$pronamic_subscription->set_customer( $order_helper->get_customer() );
 
 		// Phases.
 		$pronamic_subscription->set_phases( [] );
@@ -171,32 +175,31 @@ class SubscriptionUpdater {
 
 		$regular_phase->set_end_date( empty( $end_date ) ? null : new \DateTimeImmutable( $end_date ) );
 
+		// Add phase.
+		$pronamic_subscription->add_phase( $regular_phase );
+
 		// Next payment date.
 		$next_date = $woocommerce_subscription->get_date( 'next_payment' );
 
 		$pronamic_subscription->set_next_payment_date( empty( $next_date ) ? null : new \DateTimeImmutable( $next_date ) );
 
-		// Add phase.
-		$pronamic_subscription->add_phase( $regular_phase );
+		// Lines.
+		$pronamic_subscription->lines = $order_helper->get_lines();
 	}
 
 	/**
 	 * Maybe update Pronamic subscription for WooCommerce subscription.
 	 *
-	 * @param int $post_id WooCommerce Subscription post ID.
+	 * @param int $subscription_id WooCommerce Subscription ID.
 	 * @return void
 	 */
-	public static function maybe_update_pronamic_subscription( $post_id ) {
-		if ( 'shop_subscription' !== \get_post_type( $post_id ) ) {
-			return;
-		}
-
+	public static function maybe_update_pronamic_subscription( $subscription_id ) {
 		if ( ! \function_exists( '\wcs_get_subscription' ) ) {
 			return;
 		}
 
 		// Get WooCommerce subscription.
-		$woocommerce_subscription = \wcs_get_subscription( $post_id );
+		$woocommerce_subscription = \wcs_get_subscription( $subscription_id );
 
 		if ( false === $woocommerce_subscription ) {
 			return;

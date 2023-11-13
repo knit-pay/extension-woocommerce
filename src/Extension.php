@@ -12,6 +12,7 @@ namespace Pronamic\WordPress\Pay\Extensions\WooCommerce;
 
 use Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry;
 use Exception;
+use Pronamic\WordPress\Html\Element;
 use Pronamic\WordPress\Pay\AbstractPluginIntegration;
 use Pronamic\WordPress\Pay\Core\PaymentMethods;
 use Pronamic\WordPress\Pay\Payments\Payment;
@@ -22,6 +23,7 @@ use Pronamic\WordPress\Pay\Util as Pay_Util;
 use WC_Order;
 use WC_Order_Item;
 use WC_Payment_Gateway;
+use WP_Post;
 
 /**
  * Title: WooCommerce iDEAL Add-On
@@ -67,6 +69,9 @@ class Extension extends AbstractPluginIntegration {
 		$upgrades = $this->get_upgrades();
 
 		$upgrades->add( new Upgrade420() );
+
+		// WooCommerce Subscriptions.
+		WooCommerceSubscriptionsController::instance()->setup();
 	}
 
 	/**
@@ -77,8 +82,6 @@ class Extension extends AbstractPluginIntegration {
 	public function setup() {
 		add_filter( 'pronamic_payment_source_text_' . self::SLUG, [ __CLASS__, 'source_text' ], 10, 2 );
 		add_filter( 'pronamic_payment_source_description_' . self::SLUG, [ __CLASS__, 'source_description' ], 10, 2 );
-		add_filter( 'pronamic_subscription_source_text_' . self::SLUG, [ __CLASS__, 'subscription_source_text' ], 10, 2 );
-		add_filter( 'pronamic_subscription_source_description_' . self::SLUG, [ __CLASS__, 'subscription_source_description' ], 10, 2 );
 
 		// Check if dependencies are met and integration is active.
 		if ( ! $this->is_active() ) {
@@ -97,9 +100,6 @@ class Extension extends AbstractPluginIntegration {
 
 		\add_action( 'pronamic_pay_update_payment', [ $this, 'maybe_update_refunded_payment' ], 15, 1 );
 
-		\add_action( 'save_post', [ __NAMESPACE__ . '\SubscriptionUpdater', 'maybe_update_pronamic_subscription' ], 20, 1 );
-		\add_action( 'woocommerce_subscription_payment_method_updated', [ __NAMESPACE__ . '\SubscriptionUpdater', 'maybe_update_pronamic_subscription' ], 100, 1 );
-
 		/**
 		 * WooCommerce Blocks.
 		 *
@@ -109,7 +109,7 @@ class Extension extends AbstractPluginIntegration {
 
 		/**
 		 * WooCommerce order status completed.
-		 * 
+		 *
 		 * @link https://github.com/pronamic/wp-pronamic-pay-mollie/issues/18#issuecomment-1373362874
 		 */
 		\add_action( 'woocommerce_order_status_completed', [ $this, 'trigger_payment_fulfilled_action' ], 10, 2 );
@@ -124,13 +124,16 @@ class Extension extends AbstractPluginIntegration {
 		add_filter( 'pronamic_payment_redirect_url_' . self::SLUG, [ __CLASS__, 'redirect_url' ], 10, 2 );
 		add_action( 'pronamic_payment_status_update_' . self::SLUG, [ __CLASS__, 'status_update' ], 10, 1 );
 		add_filter( 'pronamic_payment_source_url_' . self::SLUG, [ __CLASS__, 'source_url' ], 10, 2 );
-		add_filter( 'pronamic_subscription_source_url_' . self::SLUG, [ __CLASS__, 'subscription_source_url' ], 10, 2 );
 
 		add_action( 'pronamic_payment_status_update_' . self::SLUG . '_reserved_to_cancelled', [ __CLASS__, 'reservation_cancelled_note' ], 10, 1 );
 
 		// Checkout fields.
 		add_filter( 'woocommerce_checkout_fields', [ __CLASS__, 'checkout_fields' ], 10, 1 );
 		add_action( 'woocommerce_checkout_update_order_meta', [ __CLASS__, 'checkout_update_order_meta' ], 10, 2 );
+
+		if ( \is_admin() ) {
+			\add_action( 'add_meta_boxes', [ __CLASS__, 'maybe_add_pronamic_pay_meta_box_to_wc_order' ], 10, 2 );
+		}
 
 		self::register_settings();
 	}
@@ -172,7 +175,7 @@ class Extension extends AbstractPluginIntegration {
 	/**
 	 * Register blocks payment method types.
 	 *
-	 * @param PaymentMethodRegistry $payment_method_registry
+	 * @param PaymentMethodRegistry $payment_method_registry Payment method registery.
 	 * @return void
 	 */
 	public static function blocks_payment_method_type_registration( PaymentMethodRegistry $payment_method_registry ) {
@@ -275,6 +278,11 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_belfius',
 				'payment_method' => PaymentMethods::BELFIUS,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::BELFIUS, $icon_size ),
+			],
+			[
+				'id'             => 'pronamic_pay_billie',
+				'payment_method' => PaymentMethods::BILLIE,
+				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::BILLIE, $icon_size ),
 			],
 			[
 				'id'             => 'pronamic_pay_bitcoin',
@@ -517,11 +525,7 @@ class Extension extends AbstractPluginIntegration {
 		}
 
 		// Add notice.
-		$message .= \sprintf(
-			'<div class="woocommerce-info">%s</div>',
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			__( 'We process your order as soon as we have processed your payment.', 'pronamic_ideal' )
-		);
+		$message .= ' ' . \__( 'We process your order as soon as we have processed your payment.', 'pronamic_ideal' );
 
 		return $message;
 	}
@@ -655,6 +659,15 @@ class Extension extends AbstractPluginIntegration {
 			return;
 		}
 
+		/**
+		 * This status update function will not update WooCommerce subscription orders.
+		 * 
+		 * @link https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/48
+		 */
+		if ( 'shop_subscription' === $order->get_type() ) {
+			return;
+		}
+
 		$new_status = null;
 
 		/**
@@ -694,17 +707,16 @@ class Extension extends AbstractPluginIntegration {
 		}
 
 		/**
-		 * Pending payment.
+		 * For new WooCommerce orders, the order status is 'pending' by
+		 * default. It is possible that a first payment attempt fails and the
+		 * order status is set to 'failed'. If a new payment attempt is made,
+		 * we will reset the order status to pending payment.
+		 * 
+		 * @link https://github.com/woocommerce/woocommerce/blob/7897a61a1040ca6ed3310cb537ce22211058256c/plugins/woocommerce/includes/abstracts/abstract-wc-order.php#L402-L403
+		 * @link https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/48
 		 */
-		if ( PaymentStatus::OPEN === $payment->get_status() ) {
+		if ( PaymentStatus::OPEN === $payment->get_status() && $order->needs_payment() && 'pending' !== $order->get_status() ) {
 			$new_status = WooCommerce::ORDER_STATUS_PENDING;
-		}
-
-		/**
-		 * Authorized payment.
-		 */
-		if ( PaymentStatus::AUTHORIZED === $payment->get_status() ) {
-			$new_status = WooCommerce::ORDER_STATUS_PROCESSING;
 		}
 
 		/**
@@ -719,11 +731,7 @@ class Extension extends AbstractPluginIntegration {
 			$order_payment_id = (int) $order->get_meta( '_pronamic_payment_id' );
 
 			if ( empty( $order_payment_id ) || $payment->get_id() === $order_payment_id ) {
-				try {
-					$order->update_status( $new_status );
-				} catch ( \Exception $exception ) {
-					// Nothing to do.
-				}
+				$order->update_status( $new_status );
 			}
 		}
 
@@ -750,9 +758,9 @@ class Extension extends AbstractPluginIntegration {
 		}
 
 		/**
-		 * Success.
+		 * Payment complete.
 		 */
-		if ( PaymentStatus::SUCCESS === $payment->get_status() ) {
+		if ( \in_array( $payment->get_status(), [ PaymentStatus::AUTHORIZED, PaymentStatus::SUCCESS ], true ) ) {
 			$order->payment_complete( $payment->get_transaction_id() );
 
 			// Store payment ID of current payment in WooCommerce order meta.
@@ -1028,6 +1036,35 @@ class Extension extends AbstractPluginIntegration {
 	}
 
 	/**
+	 * Select options.
+	 * 
+	 * @param array<Element>
+	 * @param string $value Value.
+	 * @return array<Element>
+	 */
+	private static function select_options( $elements, $value ) {
+		foreach ( $elements as $element ) {
+			if ( 'optgroup' === $element->tag ) {
+				self::select_options( $element->children, $value );
+			}
+
+			if ( 'option' !== $element->tag ) {
+				continue;
+			}
+
+			if ( ! \array_key_exists( 'value', $element->attributes ) ) {
+				continue;
+			}
+
+			if ( $element->attributes['value'] === $value ) {
+				$element->attributes['selected'] = 'selected';
+			}
+		}
+
+		return $elements;
+	}
+
+	/**
 	 * Input element.
 	 *
 	 * @param array $args Arguments.
@@ -1055,22 +1092,21 @@ class Extension extends AbstractPluginIntegration {
 
 		switch ( $args['type'] ) {
 			case 'select':
-				printf(
-					'<select %1$s />%2$s</select>',
-					// @codingStandardsIgnoreStart
-					Pay_Util::array_to_html_attributes( $atts ),
-					Pay_Util::select_options_grouped( $args['options'], $value )
-				// @codingStandardsIgnoreEnd
-				);
+				$element = new Element( 'select', $atts );
+
+				$options = self::select_options( $args['options'], $value );
+
+				$element->children = $options;
+
+				$element->output();
 
 				break;
 			default:
-				printf(
-					'<input %1$s />',
-					// @codingStandardsIgnoreStart
-					Pay_Util::array_to_html_attributes( $atts )
-					// @codingStandardsIgnoreEnd
-				);
+				$element = new Element( 'input', $atts );
+
+				$element->output();
+
+				break;
 		}
 
 		if ( ! empty( $args['description'] ) ) {
@@ -1088,14 +1124,6 @@ class Extension extends AbstractPluginIntegration {
 	 * @return void
 	 */
 	public static function input_checkout_fields_select( $args ) {
-		$options = [
-			[
-				'options' => [
-					__( '— Select a checkout field —', 'pronamic_ideal' ),
-				],
-			],
-		];
-
 		// Get WooCommerce checkout fields.
 		try {
 			/**
@@ -1113,7 +1141,13 @@ class Extension extends AbstractPluginIntegration {
 			$fields = [];
 		}
 
-		$options = array_merge( $options, $fields );
+		$options = $fields;
+
+		$placeholder_option = new Element( 'option' );
+
+		$placeholder_option->children[] = \__( '— Select a checkout field —', 'pronamic_ideal' );
+
+		\array_unshift( $options, $placeholder_option );
 
 		$args['type']    = 'select';
 		$args['options'] = $options;
@@ -1187,6 +1221,7 @@ class Extension extends AbstractPluginIntegration {
 	 *
 	 * @param int   $order_id Order ID.
 	 * @param array $posted   Posted checkout data.
+	 * @return void
 	 */
 	public static function checkout_update_order_meta( $order_id, $posted ) {
 		$fields = [
@@ -1194,14 +1229,27 @@ class Extension extends AbstractPluginIntegration {
 			'pronamic_pay_birth_date' => '_pronamic_pay_birth_date',
 		];
 
+		$order = \wc_get_order( $order_id );
+
+		// Check valid order.
+		if ( ! ( $order instanceof \WC_Order ) ) {
+			return;
+		}
+
+		$old_meta_data = $order->get_meta_data();
+
+		// Update meta data.
 		foreach ( $fields as $field_id => $meta_key ) {
 			if ( ! \array_key_exists( $field_id, $posted ) ) {
 				continue;
 			}
 
-			$meta_value = $posted[ $field_id ];
+			$order->update_meta_data( $meta_key, $posted[ $field_id ] );
+		}
 
-			update_post_meta( $order_id, $meta_key, $meta_value );
+		// Save updated meta data.
+		if ( $old_meta_data !== $order->get_meta_data() ) {
+			$order->save();
 		}
 	}
 
@@ -1214,25 +1262,34 @@ class Extension extends AbstractPluginIntegration {
 	 * @return string
 	 */
 	public static function source_text( $text, Payment $payment ) {
-		$text = __( 'WooCommerce', 'pronamic_ideal' ) . '<br />';
+		$source_id = $payment->get_source_id();
 
-		// Check order post meta for order number.
-		$order_number = '#' . $payment->source_id;
-
-		$value = get_post_meta( $payment->source_id, '_order_number', true );
-
-		if ( ! empty( $value ) ) {
-			$order_number = $value;
-		}
-
-		$text .= sprintf(
-			'<a href="%s">%s</a>',
-			get_edit_post_link( $payment->source_id ),
+		$order_edit_link = \sprintf(
 			/* translators: %s: order number */
-			sprintf( __( 'Order %s', 'pronamic_ideal' ), $order_number )
+			\__( 'Order %s', 'pronamic_ideal' ),
+			$source_id
 		);
 
-		return $text;
+		$order = \wc_get_order( $source_id );
+
+		if ( $order instanceof \WC_Order ) {
+			$order_edit_link = \sprintf(
+				'<a href="%1$s" title="%2$s">%2$s</a>',
+				$order->get_edit_order_url(),
+				\sprintf(
+					/* translators: %s: order number */
+					\__( 'Order %s', 'pronamic_ideal' ),
+					$order->get_order_number()
+				),
+			);
+		}
+
+		$text = [
+			\__( 'WooCommerce', 'pronamic_ideal' ),
+			$order_edit_link,
+		];
+
+		return implode( '<br>', $text );
 	}
 
 	/**
@@ -1256,68 +1313,22 @@ class Extension extends AbstractPluginIntegration {
 	 * @return null|string
 	 */
 	public static function source_url( $url, Payment $payment ) {
-		return get_edit_post_link( $payment->source_id );
-	}
+		$source_id = $payment->get_source_id();
 
-	/**
-	 * Subscription source text.
-	 *
-	 * @param string       $text         Source text.
-	 * @param Subscription $subscription Subscription.
-	 *
-	 * @return string
-	 */
-	public static function subscription_source_text( $text, Subscription $subscription ) {
-		$text = __( 'WooCommerce', 'pronamic_ideal' ) . '<br />';
+		if ( function_exists( '\wc_get_order' ) ) {
+			$order = \wc_get_order( $source_id );
 
-		// Check order post meta for order number.
-		$source_id = (int) $subscription->get_source_id();
-
-		$order_number = sprintf( '#%s', $source_id );
-
-		$value = get_post_meta( $source_id, '_order_number', true );
-
-		if ( ! empty( $value ) ) {
-			$order_number = $value;
+			if ( $order instanceof \WC_Order ) {
+				return $order->get_edit_order_url();
+			}
 		}
 
-		$text .= sprintf(
-			'<a href="%s">%s</a>',
-			get_edit_post_link( $source_id ),
-			/* translators: %s: subscription source */
-			sprintf( __( 'Subscription %s', 'pronamic_ideal' ), $order_number )
-		);
-
-		return $text;
-	}
-
-	/**
-	 * Subscription source description.
-	 *
-	 * @param string       $description  Source description.
-	 * @param Subscription $subscription Subscription.
-	 *
-	 * @return string
-	 */
-	public static function subscription_source_description( $description, Subscription $subscription ) {
-		return __( 'WooCommerce Subscription', 'pronamic_ideal' );
-	}
-
-	/**
-	 * Subscription source URL.
-	 *
-	 * @param string       $url          Source URL.
-	 * @param Subscription $subscription Subscription.
-	 *
-	 * @return null|string
-	 */
-	public static function subscription_source_url( $url, Subscription $subscription ) {
-		return get_edit_post_link( (int) $subscription->source_id );
+		return null;
 	}
 
 	/**
 	 * Trigger payment fulfilled action.
-	 * 
+	 *
 	 * @link https://github.com/woocommerce/woocommerce/blob/4927a2e41203b0f84692e46ca082fdb1d3040d4c/plugins/woocommerce/includes/class-wc-order.php#L387
 	 * @param int      $order_id Order ID.
 	 * @param WC_Order $order    Order.
@@ -1338,11 +1349,43 @@ class Extension extends AbstractPluginIntegration {
 
 		/**
 		 * Payment fulfilled.
-		 * 
+		 *
 		 * @ignore Private action for now.
 		 * @param Payment $payment Payment.
 		 * @link https://github.com/pronamic/wp-pronamic-pay-mollie/issues/18#issuecomment-1373362874
 		 */
 		\do_action( 'pronamic_pay_payment_fulfilled', $payment );
+	}
+
+	/**
+	 * Maybe add a Pronamic Pay meta box the WooCommerce order.
+	 * 
+	 * @link https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/41
+	 * @link https://developer.wordpress.org/reference/hooks/add_meta_boxes/
+	 * @param string           $post_type_or_screen_id Post type or screen ID.
+	 * @param WC_Order|WP_Post $post_or_order_object   Post or order object.
+	 * @return void
+	 */
+	public static function maybe_add_pronamic_pay_meta_box_to_wc_order( $post_type_or_screen_id, $post_or_order_object ) {
+		if ( ! \in_array( $post_type_or_screen_id, [ 'shop_order', 'woocommerce_page_wc-orders' ], true ) ) {
+			return;
+		}
+
+		$order = $post_or_order_object instanceof WC_Order ? $post_or_order_object : \wc_get_order( $post_or_order_object->ID );
+
+		if ( ! $order instanceof WC_Order ) {
+			return;
+		}
+
+		\add_meta_box(
+			'woocommerce-order-pronamic-pay',
+			\__( 'Pronamic Pay', 'pronamic_ideal' ),
+			function () use ( $order ) {
+				include __DIR__ . '/../views/admin-meta-box-woocommerce-order.php';
+			},
+			$post_type_or_screen_id,
+			'side',
+			'default'
+		);
 	}
 }

@@ -59,13 +59,6 @@ class Gateway extends WC_Payment_Gateway {
 	protected $payment_method;
 
 	/**
-	 * The payment
-	 *
-	 * @var Payment|null
-	 */
-	protected $payment;
-
-	/**
 	 * Is recurring payment
 	 *
 	 * @var bool|null
@@ -309,6 +302,7 @@ class Gateway extends WC_Payment_Gateway {
 				'title'       => __( 'Payment Options', 'pronamic_ideal' ),
 				'type'        => 'title',
 				'description' => '',
+				'default'     => '',
 			],
 			'payment_description' => [
 				'title'       => __( 'Payment Description', 'pronamic_ideal' ),
@@ -356,6 +350,7 @@ class Gateway extends WC_Payment_Gateway {
 	 *
 	 * @param int $order_id WooCommerce order ID.
 	 * @return array
+	 * @throws \Exception Throws exception if the payment cannot be initiated.
 	 */
 	public function process_payment( $order_id ) {
 		// Gateway.
@@ -368,7 +363,7 @@ class Gateway extends WC_Payment_Gateway {
 				// @link https://github.com/woothemes/woocommerce/blob/v2.1.5/includes/admin/settings/class-wc-settings-page.php#L66
 				$notice = sprintf(
 					/* translators: %s: WooCommerce checkout settings URL */
-					__( 'You have to select an gateway configuration on the <a href="%s">WooCommerce checkout settings page</a>.', 'pronamic_ideal' ),
+					__( 'You have to select a gateway configuration on the <a href="%s">WooCommerce checkout settings page</a>.', 'pronamic_ideal' ),
 					add_query_arg(
 						[
 							'page'    => 'wc-settings',
@@ -400,41 +395,97 @@ class Gateway extends WC_Payment_Gateway {
 		 */
 		$subscriptions = $this->get_pronamic_subscriptions( $order );
 
-		foreach ( $subscriptions as $subscription ) {
-			// Add subscription and period.
-			$payment->add_subscription( $subscription );
+		if ( \count( $subscriptions ) > 0 ) {
+			$has_auto_renew = false;
 
-			$period = $subscription->next_period();
+			foreach ( $subscriptions as $subscription ) {
+				// Add subscription and period.
+				$payment->add_subscription( $subscription );
 
-			if ( null !== $period ) {
-				$payment->add_period( $period );
+				$start_date = $subscription->get_start_date();
+
+				if ( null !== $start_date ) {
+					$period = $subscription->get_period_for_date( $start_date );
+
+					if ( null !== $period ) {
+						$payment->add_period( $period );
+					}
+				}
+
+				$subscription->save();
+
+				$woocommerce_subscription_id = $subscription->get_source_id();
+
+				$woocommerce_subscription = \wcs_get_subscription( $woocommerce_subscription_id );
+
+				if ( false !== $woocommerce_subscription ) {
+					$has_auto_renew = ( $has_auto_renew || ! $woocommerce_subscription->is_manual() );
+
+					$woocommerce_subscription->add_meta_data( 'pronamic_subscription_id', $subscription->get_id(), true );
+
+					$woocommerce_subscription->save();
+				}
 			}
 
-			$payment->set_meta( 'mollie_sequence_type', 'first' );
-
-			$subscription->save();
-
-			$woocommerce_subscription_id = $subscription->get_source_id();
-
-			$woocommerce_subscription = \wcs_get_subscription( $woocommerce_subscription_id );
-
-			if ( false !== $woocommerce_subscription ) {
-				$woocommerce_subscription->add_meta_data( 'pronamic_subscription_id', $subscription->get_id(), true );
-
-				$woocommerce_subscription->save();
-			}
+			/**
+			 * If one of the subscriptions needs to be automatically renewed, a
+			 * mandate must be created with Mollie. For this we set the Mollie
+			 * payments sequence type to 'first'.
+			 *
+			 * @link https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/58
+			 */
+			$payment->set_meta( 'mollie_sequence_type', $has_auto_renew ? 'first' : '' );
 		}
 
 		$this->connect_subscription_payment_renewal( $payment, $order );
 
+		// Store WooCommerce gateway in payment meta.
+		$payment->set_meta( 'woocommerce_payment_method', $this->id );
+		$payment->set_meta( 'woocommerce_payment_method_title', $this->get_title() );
+
 		// Set Mollie sequence type on payment method change.
 		if ( \did_action( 'woocommerce_subscription_change_payment_method_via_pay_shortcode' ) ) {
 			$payment->set_meta( 'mollie_sequence_type', 'first' );
+
+			/**
+			 * Use payment method minimum amount for verification payment.
+			 *
+			 * @link https://help.mollie.com/hc/en-us/articles/115000667365-What-are-the-minimum-and-maximum-amounts-per-payment-method-
+			 * @link https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/51
+			 */
+			$total_amount = $payment->get_total_amount();
+
+			if ( $total_amount->is_zero() ) {
+				switch ( $payment->get_payment_method() ) {
+					case PaymentMethods::BANCONTACT:
+					case PaymentMethods::DIRECT_DEBIT_BANCONTACT:
+						$amount = 0.02;
+
+						break;
+					case PaymentMethods::DIRECT_DEBIT_SOFORT:
+					case PaymentMethods::SOFORT:
+						$amount = 0.10;
+
+						break;
+					case PaymentMethods::APPLE_PAY:
+					case PaymentMethods::CREDIT_CARD:
+					case PaymentMethods::PAYPAL:
+						$amount = 0.00;
+
+						break;
+					default:
+						$amount = 0.01;
+				}
+
+				$total_amount = new Money( $amount, $total_amount->get_currency() );
+
+				$payment->set_total_amount( $total_amount );
+			}
 		}
 
 		// Start payment.
 		try {
-			$this->payment = Plugin::start_payment( $payment );
+			$payment = Plugin::start_payment( $payment );
 		} catch ( \Exception $exception ) {
 			WooCommerce::add_notice( Plugin::get_default_error_message(), 'error' );
 
@@ -446,48 +497,22 @@ class Gateway extends WC_Payment_Gateway {
 			throw $exception;
 		}
 
-		// Store WooCommerce gateway in payment meta.
-		$this->payment->set_meta( 'woocommerce_payment_method', $order->get_payment_method() );
-		$this->payment->set_meta( 'woocommerce_payment_method_title', $order->get_payment_method_title() );
-
 		// Store payment ID in WooCommerce order meta.
 		$order->update_meta_data( '_pronamic_payment_id', (string) $payment->get_id() );
 
 		$order->save();
 
-		// Reload order for actual status (could be paid already; i.e. through recurring credit card payment).
-		$order = \wc_get_order( $order );
-
-		// Order note and status.
-		$new_status_slug = WooCommerce::ORDER_STATUS_PENDING;
-
-		$note = __( 'Awaiting payment.', 'pronamic_ideal' );
-
-		$order_status = WooCommerce::order_get_status( $order );
-
-		// Only add order note if status is already pending or if WooCommerce Deposits is activated.
-		if ( $new_status_slug === $order_status || isset( $order->wc_deposits_remaining ) ) {
-			$order->add_order_note( $note );
-		} elseif ( PaymentStatus::SUCCESS !== $payment->get_status() ) {
-			// Mark as pending (we're awaiting the payment).
-			try {
-				$order->update_status( $new_status_slug, $note );
-			} catch ( \Exception $exception ) {
-				// Nothing to do.
-			}
-		}
-
 		// Return results array.
 		return [
 			'result'   => 'success',
-			'redirect' => $this->payment->get_pay_redirect_url(),
+			'redirect' => $payment->get_pay_redirect_url(),
 		];
 	}
 
 	/**
 	 * New Pronamic payment from WooCommerce order.
 	 *
-	 * @param WC_Order $order
+	 * @param WC_Order $order Order.
 	 * @return Payment
 	 */
 	private function new_pronamic_payment_from_wc_order( WC_Order $order ) {
@@ -529,23 +554,14 @@ class Gateway extends WC_Payment_Gateway {
 
 		$description = strtr( $this->payment_description, $replacements );
 
-		// Contact.
-		$contact_name = new ContactName();
-		$contact_name->set_first_name( WooCommerce::get_billing_first_name( $order ) );
-		$contact_name->set_last_name( WooCommerce::get_billing_last_name( $order ) );
+		// Order helper.
+		$order_helper = new OrderHelper( $order );
 
-		$customer = new Customer();
-		$customer->set_name( $contact_name );
-		$customer->set_email( WooCommerce::get_billing_email( $order ) );
-		$customer->set_phone( WooCommerce::get_billing_phone( $order ) );
-		$customer->set_user_id( $order->get_user_id() );
+		// Contact name.
+		$contact_name = $order_helper->get_contact_name();
 
-		// Company name.
-		$company_name = WooCommerce::get_billing_company( $order );
-
-		if ( ! empty( $company_name ) ) {
-			$customer->set_company_name( $company_name );
-		}
+		// Customer.
+		$customer = $order_helper->get_customer();
 
 		// Customer gender.
 		$gender = null;
@@ -720,59 +736,8 @@ class Gateway extends WC_Payment_Gateway {
 			)
 		);
 
-		/*
-		 * Payment lines and order items.
-		 *
-		 * WooCommerce has multiple order item types:
-		 * `line_item`, `fee`, `shipping`, `tax`, `coupon`
-		 * @link https://github.com/woocommerce/woocommerce/search?q=%22extends+WC_Order_Item%22
-		 *
-		 * For now we handle only the `line_item`, `fee` and `shipping` items,
-		 * we consciously don't handle the `tax` and `coupon` items.
-		 *
-		 * **Order item `coupon`**
-		 * Coupon items are also applied to the `line_item` item and line total.
-		 * @link https://basecamp.com/1810084/projects/10966871/todos/372490988
-		 *
-		 * **Order item `tax`**
-		 * Tax items are also  applied to the `line_item` item and line total.
-		 */
-		$items = $order->get_items( [ 'line_item', 'fee', 'shipping' ] );
-
-		$tax_percentages = [ 0 ];
-
-		$payment->lines = new PaymentLines();
-
-		foreach ( $items as $item_id => $item ) {
-			$line = $payment->lines->new_line();
-
-			$type = OrderItemType::transform( $item );
-
-			// Quantity.
-			$quantity = wc_stock_amount( $item['qty'] );
-
-			if ( PaymentLineType::SHIPPING === $type ) {
-				$quantity = 1;
-			}
-
-			// Tax.
-			$tax_rate_id = WooCommerce::get_order_item_tax_rate_id( $item );
-
-			$percent = is_null( $tax_rate_id ) ? null : \WC_Tax::get_rate_percent_value( $tax_rate_id );
-
-			// Set line properties.
-			$line->set_id( (string) $item_id );
-			$line->set_sku( WooCommerce::get_order_item_sku( $item ) );
-			$line->set_type( (string) $type );
-			$line->set_name( $item['name'] );
-			$line->set_quantity( $quantity );
-			$line->set_unit_price( new TaxedMoney( $order->get_item_total( $item, true ), WooCommerce::get_currency(), $order->get_item_tax( $item ), $percent ) );
-			$line->set_total_amount( new TaxedMoney( $order->get_line_total( $item, true ), WooCommerce::get_currency(), $order->get_line_tax( $item ), $percent ) );
-			$line->set_product_url( WooCommerce::get_order_item_url( $item ) );
-			$line->set_image_url( WooCommerce::get_order_item_image( $item ) );
-			$line->set_product_category( WooCommerce::get_order_item_category( $item ) );
-			$line->set_meta( 'woocommerce_order_item_id', $item_id );
-		}
+		// Payment lines and order items.
+		$payment->lines = $order_helper->get_lines();
 
 		return $payment;
 	}
@@ -824,20 +789,18 @@ class Gateway extends WC_Payment_Gateway {
 
 		$woocommerce_subscriptions = \wcs_get_subscriptions_for_order( $order, [ 'order_type' => 'renewal' ] );
 
+		// Add subscription on payment method change.
+		if ( $order instanceof \WC_Subscription ) {
+			$woocommerce_subscriptions[] = $order;
+		}
+
 		foreach ( $woocommerce_subscriptions as $woocommerce_subscription ) {
 			$subscription_helper = new SubscriptionHelper( $woocommerce_subscription );
 
 			$pronamic_subscription = $subscription_helper->get_pronamic_subscription();
 
 			if ( null !== $pronamic_subscription ) {
-				// Add subscription and period.
 				$payment->add_subscription( $pronamic_subscription );
-
-				$period = $pronamic_subscription->next_period();
-
-				if ( null !== $period ) {
-					$payment->add_period( $period );
-				}
 			}
 		}
 	}
@@ -921,9 +884,9 @@ class Gateway extends WC_Payment_Gateway {
 	/**
 	 * Process refund.
 	 *
-	 * @param int        $order_id
-	 * @param float|null $amount
-	 * @param string     $reason
+	 * @param int        $order_id Order ID.
+	 * @param float|null $amount   Amount.
+	 * @param string     $reason   Reason.
 	 * @return bool|\WP_Error
 	 */
 	public function process_refund( $order_id, $amount = null, $reason = '' ) {
@@ -996,7 +959,7 @@ class Gateway extends WC_Payment_Gateway {
 
 					if ( null !== $payment_line ) {
 						$line->meta = $payment_line->meta;
-						
+
 						$line->set_payment_line( $payment_line );
 					}
 				}
