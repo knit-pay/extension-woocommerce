@@ -300,10 +300,14 @@ class Extension extends AbstractPluginIntegration {
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::BUNQ, $icon_size ),
 			], */
 			[
-				'id'             => 'pronamic_pay_credit_card',
-				'payment_method' => PaymentMethods::CREDIT_CARD,
-				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::CREDIT_CARD, $icon_size ),
-				'check_active'   => false,
+				'id'                 => 'pronamic_pay_credit_card',
+				'payment_method'     => PaymentMethods::CREDIT_CARD,
+				'icon'               => PaymentMethods::get_icon_url( PaymentMethods::CREDIT_CARD, $icon_size ),
+				'check_active'       => false,
+				'method_description' => \__(
+					'The most popular payment method in the world. Offers customers a safe and trusted way to pay online. Customers can pay for their order quickly and easily with their credit card, without having to worry about their security. It is possible to charge a payment surcharge for credit card costs.',
+					'pronamic_ideal'
+				),
 			],
 			/* [
 				'id'             => 'pronamic_pay_direct_debit',
@@ -390,6 +394,11 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_in3',
 				'payment_method' => PaymentMethods::IN3,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::IN3, $icon_size ),
+				'form_fields'    => [
+					'description' => [
+						'default' => self::get_bnpl_disclaimer( \__( 'In3', 'pronamic_ideal' ) ),
+					],
+				],
 			],
 			[
 				'id'             => 'pronamic_pay_kbc',
@@ -400,6 +409,11 @@ class Extension extends AbstractPluginIntegration {
 				'id'             => 'pronamic_pay_klarna_pay_later',
 				'payment_method' => PaymentMethods::KLARNA_PAY_LATER,
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::KLARNA_PAY_LATER, $icon_size ),
+				'form_fields'    => [
+					'description' => [
+						'default' => self::get_bnpl_disclaimer( \__( 'Klarna', 'pronamic_ideal' ) ),
+					],
+				],
 			],
 			[
 				'id'             => 'pronamic_pay_klarna_pay_now',
@@ -446,9 +460,18 @@ class Extension extends AbstractPluginIntegration {
 				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::PRZELEWY24, $icon_size ),
 			],
 			[
-				'id'             => 'pronamic_pay_riverty',
-				'payment_method' => PaymentMethods::RIVERTY,
-				'icon'           => PaymentMethods::get_icon_url( PaymentMethods::RIVERTY, $icon_size ),
+				'id'                 => 'pronamic_pay_riverty',
+				'payment_method'     => PaymentMethods::RIVERTY,
+				'icon'               => PaymentMethods::get_icon_url( PaymentMethods::RIVERTY, $icon_size ),
+				'form_fields'        => [
+					'description' => [
+						'default' => self::get_bnpl_disclaimer( \__( 'Riverty', 'pronamic_ideal' ) ),
+					],
+				],
+				'method_description' => \__(
+					'Riverty (formerly AfterPay) is a payment service that allows customers to pay after receiving the product.',
+					'pronamic_ideal'
+				),
 			],
 			[
 				'id'             => 'pronamic_pay_santander',
@@ -491,6 +514,24 @@ class Extension extends AbstractPluginIntegration {
 			], */
 		];
 		return wp_parse_args( $pronamic_pay_gateways, $active_gateways );
+	}
+
+	/**
+	 * Get Buy Now, Pay Later disclaimer.
+	 * 
+	 * @link https://github.com/pronamic/pronamic-pay/issues/70
+	 * @param string $provider Provider.
+	 * @return string
+	 */
+	private static function get_bnpl_disclaimer( $provider ) {
+		return \sprintf(
+			/* translators: %s: provider */
+			\__(
+				'You must be at least 18+ to use this service. If you pay on time, you will avoid additional costs and ensure that you can use %s services again in the future. By continuing, you accept the Terms and Conditions and confirm that you have read the Privacy Statement and Cookie Statement.',
+				'pronamic_ideal'
+			),
+			\esc_html( $provider )
+		);
 	}
 
 	/**
