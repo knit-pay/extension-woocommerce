@@ -1,7 +1,14 @@
 {
 	"name": "wp-pay-extensions/woocommerce",
 	"description": "WooCommerce driver for the WordPress payment processing library.",
-	"keywords": ["wordpress", "wp", "pay", "woocommerce", "extension", "pronamic"],
+	"keywords": [
+		"wordpress",
+		"wp",
+		"pay",
+		"woocommerce",
+		"extension",
+		"pronamic"
+	],
 	"homepage": "http://www.wp-pay.org/extensions/woocommerce/",
 	"license": "GPL-3.0-or-later",
 	"type": "wordpress-plugin",
@@ -29,7 +36,7 @@
 			"Pronamic\\WordPress\\Pay\\Extensions\\WooCommerce\\": "src/"
 		}
 	},
-	"repositories":[
+	"repositories": [
 		{
 			"type": "composer",
 			"url": "https://wpackagist.org/"
@@ -37,26 +44,17 @@
 		{
 			"type": "package",
 			"package": {
-				"name": "wp-premium/woocommerce-subscriptions",
-				"version": "3.0.9",
+				"name": "pronamic/woocommerce-subscriptions",
+				"version": "6.0.0",
 				"type": "wordpress-plugin",
 				"dist": {
-					"url": "https://github.com/wp-premium/woocommerce-subscriptions/archive/3.0.9.zip",
+					"url": "https://github.com/pronamic/woocommerce-subscriptions/releases/download/v6.0.0/woocommerce-subscriptions-6.0.0.zip",
 					"type": "zip"
 				},
 				"source": {
-					"url": "https://github.com/wp-premium/woocommerce-subscriptions",
+					"url": "https://github.com/pronamic/woocommerce-subscriptions",
 					"type": "github",
-					"reference": "tags/3.0.9"
-				},
-				"autoload": {
-					"classmap": [
-						"includes/"
-					],
-					"exclude-from-classmap": [
-						"includes/api/legacy/",
-						"includes/libraries/"
-					]
+					"reference": "tags/v6.0.0"
 				}
 			}
 		}
@@ -71,27 +69,40 @@
 			"automattic/jetpack-autoloader": true
 		}
 	},
+	"extra": {
+		"installer-paths": {
+			"packages/{$vendor}/{$name}": [
+				"vendor:pronamic",
+				"vendor:wp-pay",
+				"vendor:wp-pay-extensions",
+				"vendor:wp-pay-gateways",
+				"woocommerce/action-scheduler"
+			]
+		}
+	},
 	"require": {
-		"php": ">=7.4",
+		"php": ">=8.0",
+		"automattic/jetpack-autoloader": "^3.0",
 		"pronamic/wp-html": "^2.2",
-		"wp-pay/core": "^4.9"
+		"woocommerce/action-scheduler": "^3.7",
+		"wp-pay/core": "^4.16"
 	},
 	"require-dev": {
-		"bamarni/composer-bin-plugin": "^1.4",
-		"overtrue/phplint": "^4.4",
-		"php-coveralls/php-coveralls": "^2.5",
-		"php-stubs/woocommerce-stubs": "^7.5",
-		"php-stubs/wp-cli-stubs": "^2.6",
-		"phpmd/phpmd": "^2.9",
+		"bamarni/composer-bin-plugin": "^1.8",
+		"overtrue/phplint": "^9.1",
+		"php-coveralls/php-coveralls": "^2.7",
+		"php-stubs/woocommerce-stubs": "^8.7",
+		"php-stubs/wp-cli-stubs": "^2.10",
+		"phpmd/phpmd": "^2.15",
 		"pronamic/pronamic-cli": "^1.1",
-		"pronamic/wp-coding-standards": "^2.0",
-		"roots/wordpress": "^6.0",
-		"wp-cli/wp-cli": "^2.6",
-		"wp-phpunit/wp-phpunit": "^6.1",
-		"wp-premium/woocommerce-subscriptions": "^3.0",
-		"wpackagist-plugin/woocommerce": "^7.5",
-		"yoast/phpunit-polyfills": "^1.0",
-		"yoast/wordpress-seo": "^19.6"
+		"pronamic/woocommerce-subscriptions": "^6.0",
+		"pronamic/wp-coding-standards": "^2.2",
+		"roots/wordpress": "^6.4",
+		"wp-cli/wp-cli": "^2.10",
+		"wp-phpunit/wp-phpunit": "^6.4",
+		"wpackagist-plugin/woocommerce": "^8.7",
+		"yoast/phpunit-polyfills": "^2.0",
+		"yoast/wordpress-seo": "^22.3"
 	},
 	"scripts": {
 		"coveralls": "vendor/bin/php-coveralls -v",

@@ -149,8 +149,8 @@ class PaymentMethodType extends AbstractPaymentMethodType {
 			'title'            => $this->get_setting( 'title' ),
 			'description'      => $description,
 			'fields'           => $gateway->get_input_fields(),
-			'icon'             => $this->get_setting( 'icon' ),
-			// 'orderButtonLabel' => $order_button_label, // Temporarily commented by Knit Pay.
+			'icon'             => $gateway->get_pronamic_icon_url(),
+			// 'orderButtonLabel' => $order_button_label, // Temporarily commented by Knit Pay
 			'supports'         => $this->get_supported_features(),
 		];
 	}
