@@ -1311,18 +1311,20 @@ class Extension extends AbstractPluginIntegration {
 			$source_id
 		);
 
-		$order = \wc_get_order( $source_id );
+		if ( \function_exists( 'wc_get_order' ) ) {
+			$order = \wc_get_order( $source_id );
 
-		if ( $order instanceof \WC_Order ) {
-			$order_edit_link = \sprintf(
-				'<a href="%1$s" title="%2$s">%2$s</a>',
-				$order->get_edit_order_url(),
-				\sprintf(
-					/* translators: %s: order number */
-					\__( 'Order %s', 'pronamic_ideal' ),
-					$order->get_order_number()
-				),
-			);
+			if ( $order instanceof \WC_Order ) {
+				$order_edit_link = \sprintf(
+					'<a href="%1$s" title="%2$s">%2$s</a>',
+					$order->get_edit_order_url(),
+					\sprintf(
+						/* translators: %s: order number */
+						\__( 'Order %s', 'pronamic_ideal' ),
+						$order->get_order_number()
+					),
+				);
+			}
 		}
 
 		$text = [
