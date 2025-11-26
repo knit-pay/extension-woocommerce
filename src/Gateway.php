@@ -3,7 +3,7 @@
  * Gateway
  *
  * @author    Pronamic <info@pronamic.eu>
- * @copyright 2005-2023 Pronamic
+ * @copyright 2005-2025 Pronamic
  * @license   GPL-3.0-or-later
  * @package   Pronamic\WordPress\Pay\Extensions\WooCommerce
  */
@@ -33,7 +33,7 @@ use WC_Payment_Gateway;
 /**
  * Title: WooCommerce iDEAL gateway
  * Description:
- * Copyright: 2005-2023 Pronamic
+ * Copyright: 2005-2025 Pronamic
  * Company: Pronamic
  *
  * @link https://github.com/woocommerce/woocommerce/blob/3.5.3/includes/abstracts/abstract-wc-payment-gateway.php
@@ -122,9 +122,9 @@ class Gateway extends WC_Payment_Gateway {
 		if ( null === $this->method_title ) {
 			$this->method_title = sprintf(
 				/* translators: 1: Gateway admin label prefix, 2: Gateway admin label */
-				__( '%1$s - %2$s', 'pronamic_ideal' ),
-				__( 'Knit Pay', 'pronamic_ideal' ),
-				PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic_ideal' ) )
+				__( '%1$s - %2$s', 'pronamic-pay-woocommerce' ),
+				__( 'Knit Pay', 'pronamic-pay-woocommerce' ),
+				PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic-pay-woocommerce' ) )
 			);
 		}
 
@@ -140,13 +140,11 @@ class Gateway extends WC_Payment_Gateway {
 		/* temporarily Commented by Knit Pay to remove Proceed to Credit Card for razorpay subscription.
 		if ( null !== $this->payment_method ) {
 			$this->order_button_text = sprintf(
-				__( 'Proceed to %s', 'pronamic_ideal' ),
-				PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic_ideal' ) )
+				/* translators: %s: payment method title */
+				__( 'Proceed to %s', 'pronamic-pay-woocommerce' ),
+				PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic-pay-woocommerce' ) )
 			);
 		}*/
-
-		// Load the form fields.
-		$this->init_form_fields();
 
 		// Load the settings.
 		$this->init_settings();
@@ -163,6 +161,9 @@ class Gateway extends WC_Payment_Gateway {
 		if ( empty( $this->config_id ) ) {
 			$this->config_id = \get_option( 'pronamic_pay_config_id' );
 		}
+
+		// Load the form fields.
+		$this->init_form_fields();
 
 		// Maybe support refunds (uses config ID setting).
 		$this->maybe_add_refunds_support();
@@ -201,7 +202,7 @@ class Gateway extends WC_Payment_Gateway {
 
 	/**
 	 * Get Pronamic icon URL.
-	 * 
+	 *
 	 * @link https://github.com/pronamic/wp-pronamic-pay-woocommerce/issues/66
 	 * @return string
 	 */
@@ -291,84 +292,86 @@ class Gateway extends WC_Payment_Gateway {
 
 		$this->form_fields = [
 			'enabled'             => [
-				'title'   => __( 'Enable/Disable', 'pronamic_ideal' ),
+				'title'   => __( 'Enable/Disable', 'pronamic-pay-woocommerce' ),
 				'type'    => 'checkbox',
 				'label'   => sprintf(
 					/* translators: %s: payment method title */
-					__( 'Enable %s', 'pronamic_ideal' ),
+					__( 'Enable %s', 'pronamic-pay-woocommerce' ),
 					$this->method_title
 				),
 				'default' => 'no',
 			],
 			'title'               => [
-				'title'       => __( 'Title', 'pronamic_ideal' ),
+				'title'       => __( 'Title', 'pronamic-pay-woocommerce' ),
 				'type'        => 'text',
-				'description' => $description_prefix . __( 'This controls the title which the user sees during checkout.', 'pronamic_ideal' ),
-				'default'     => PaymentMethods::get_name( $this->payment_method, __( 'Pay Online', 'pronamic_ideal' ) ),
+				'description' => $description_prefix . __( 'This controls the title which the user sees during checkout.', 'pronamic-pay-woocommerce' ),
+				'default'     => PaymentMethods::get_name( $this->payment_method, __( 'Online Payment', 'pronamic-pay-woocommerce' ) ),
 			],
 			'description'         => [
-				'title'       => __( 'Description', 'pronamic_ideal' ),
+				'title'       => __( 'Description', 'pronamic-pay-woocommerce' ),
 				'type'        => 'textarea',
 				'description' => $description_prefix . sprintf(
 					/* translators: %s: payment method title */
-					__( 'Give the customer instructions for paying via %s, and let them know that their order won\'t be shipping until the money is received.', 'pronamic_ideal' ),
+					__( 'Give the customer instructions for paying via %s, and let them know that their order won\'t be shipping until the money is received.', 'pronamic-pay-woocommerce' ),
 					$this->method_title
 				),
 				'default'     => '',
 			],
 			'icon_display'        => [
-				'title'       => __( 'Icon display', 'pronamic_ideal' ),
+				'title'       => __( 'Icon display', 'pronamic-pay-woocommerce' ),
 				'type'        => 'select',
 				'options'     => [
-					'default' => \__( 'Default', 'pronamic_ideal' ),
-					'none'    => \__( 'None', 'pronamic_ideal' ),
-					'custom'  => \__( 'Custom', 'pronamic_ideal' ),
+					'default' => \__( 'Default', 'pronamic-pay-woocommerce' ),
+					'none'    => \__( 'None', 'pronamic-pay-woocommerce' ),
+					'custom'  => \__( 'Custom', 'pronamic-pay-woocommerce' ),
 				],
 				'description' => sprintf(
 					'%s%s',
 					$description_prefix,
-					__( 'This controls how the payment gateway icon is displayed on the checkout page.', 'pronamic_ideal' )
+					__( 'This controls how the payment gateway icon is displayed on the checkout page.', 'pronamic-pay-woocommerce' )
 				),
 				'default'     => ( '' === $icon_display && '' !== $icon_url ) ? 'custom' : '',
 			],
 			'icon'                => [
-				'title'       => __( 'Custom icon URL', 'pronamic_ideal' ),
+				'title'       => __( 'Custom icon URL', 'pronamic-pay-woocommerce' ),
 				'type'        => 'text',
 				'description' => sprintf(
 					'%s%s',
 					$description_prefix,
-					__( 'Provide a publicly accessible URL for your own payment gateway icon (only used if "Custom" is selected in the icon display setting).', 'pronamic_ideal' )
+					__( 'Provide a publicly accessible URL for your own payment gateway icon (only used if "Custom" is selected in the icon display setting).', 'pronamic-pay-woocommerce' )
 				),
 				'default'     => '',
 			],
 			'config_id'           => [
-				'title'       => __( 'Configuration', 'pronamic_ideal' ),
+				'title'       => __( 'Configuration', 'pronamic-pay-woocommerce' ),
 				'type'        => 'select',
 				'default'     => get_option( 'pronamic_pay_config_id' ),
 				'options'     => Plugin::get_config_select_options( $this->payment_method ),
 				'description' => 'Configurations can be created in Knit Pay gateway configurations page at <a href="' . admin_url() . 'edit.php?post_type=pronamic_gateway">"Knit Pay >> Configurations"</a>.',
 			],
 			'payment'             => [
-				'title'       => __( 'Payment Options', 'pronamic_ideal' ),
+				'title'       => __( 'Payment Options', 'pronamic-pay-woocommerce' ),
 				'type'        => 'title',
 				'description' => '',
 				'default'     => '',
 			],
 			'payment_description' => [
-				'title'       => __( 'Payment Description', 'pronamic_ideal' ),
+				'title'       => __( 'Payment Description', 'pronamic-pay-woocommerce' ),
 				'type'        => 'text',
 				'description' => sprintf(
 					'%s%s<br />%s<br />%s',
 					$description_prefix,
-					__( 'This controls the payment description.', 'pronamic_ideal' ),
+					__( 'This controls the payment description.', 'pronamic-pay-woocommerce' ),
 					/* translators: %s: default code */
-					sprintf( __( 'Default: <code>%s</code>', 'pronamic_ideal' ), __( 'Order {order_number}', 'pronamic_ideal' ) ),
+					sprintf( __( 'Default: <code>%s</code>', 'pronamic-pay-woocommerce' ), __( 'Order {order_number}', 'pronamic-pay-woocommerce' ) ),
 					/* translators: %s: tags */
-					sprintf( __( 'Tags: %s', 'pronamic_ideal' ), sprintf( '<code>%s</code> <code>%s</code> <code>%s</code>', '{order_number}', '{order_date}', '{blogname}' ) )
+					sprintf( __( 'Tags: %s', 'pronamic-pay-woocommerce' ), sprintf( '<code>%s</code> <code>%s</code> <code>%s</code>', '{order_number}', '{order_date}', '{payment_lines_name}', '{blogname}' ) )
 				),
-				'default'     => __( 'Order {order_number}', 'pronamic_ideal' ),
+				'default'     => __( 'Order {order_number}', 'pronamic-pay-woocommerce' ),
 			],
 		];
+
+		$this->maybe_add_ideal_issuers_settings_field();
 
 		if ( isset( $this->gateway_args['icon'] ) ) {
 			$this->form_fields['icon']['default'] = $this->gateway_args['icon'];
@@ -376,9 +379,9 @@ class Gateway extends WC_Payment_Gateway {
 			$this->form_fields['icon']['description'] = sprintf(
 				'%s%s<br />%s',
 				$description_prefix,
-				__( 'This controls the icon which the user sees during checkout.', 'pronamic_ideal' ),
+				__( 'This controls the icon which the user sees during checkout.', 'pronamic-pay-woocommerce' ),
 				/* translators: %s: default code */
-				sprintf( __( 'Default: <code>%s</code>', 'pronamic_ideal' ), $this->form_fields['icon']['default'] )
+				sprintf( __( 'Default: <code>%s</code>', 'pronamic-pay-woocommerce' ), $this->form_fields['icon']['default'] )
 			);
 		}
 
@@ -396,6 +399,61 @@ class Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Get show iDEAL issuers default.
+	 * 
+	 * @return bool
+	 */
+	private function get_show_show_ideal_issuers_default() {
+		if ( '' === $this->config_id ) {
+			return false;
+		}
+
+		if ( '0' === $this->config_id ) {
+			return false;
+		}
+
+		$config_post = \get_post( (int) $this->config_id );
+
+		if ( null === $config_post ) {
+			return false;
+		}
+
+		$config_post_date = \get_post_datetime( $config_post );
+
+		if ( false === $config_post_date ) {
+			return false;
+		}
+
+		$default_disabled_from_date = new DateTime( '2025-01-01' );
+
+		if ( $config_post_date < $default_disabled_from_date ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Maybe add settings field for showing iDEAL issuers in checkout.
+	 *
+	 * @return void
+	 */
+	private function maybe_add_ideal_issuers_settings_field() {
+		// Check iDEAL payment method.
+		if ( ! \in_array( $this->payment_method, [ PaymentMethods::IDEAL, PaymentMethods::DIRECT_DEBIT_IDEAL ], true ) ) {
+			return;
+		}
+
+		$this->form_fields['show_ideal_issuers'] = [
+			'type'        => 'checkbox',
+			'title'       => \__( 'Show iDEAL issuers', 'pronamic-pay-woocommerce' ),
+			'label'       => \__( 'Show iDEAL issuer selection field if available', 'pronamic-pay-woocommerce' ),
+			'description' => \__( 'With the introduction of the new iDEAL (2.0) in mid-2024, it is recommended to let customers select their bank on the new iDEAL payment screen. As a result, displaying iDEAL banks on your own website is discouraged.', 'pronamic-pay-woocommerce' ),
+			'default'     => $this->get_show_show_ideal_issuers_default() ? 'yes' : 'no',
+		];
+	}
+
+	/**
 	 * Process the payment and return the result.
 	 *
 	 * @param int $order_id WooCommerce order ID.
@@ -407,13 +465,13 @@ class Gateway extends WC_Payment_Gateway {
 		$gateway = Plugin::get_gateway( (int) $this->config_id );
 
 		if ( null === $gateway ) {
-			$notice = __( 'The payment gateway could not be found.', 'pronamic_ideal' );
+			$notice = __( 'The payment gateway could not be found.', 'pronamic-pay-woocommerce' );
 
 			if ( current_user_can( 'manage_options' ) && empty( $this->config_id ) ) {
 				// @link https://github.com/woothemes/woocommerce/blob/v2.1.5/includes/admin/settings/class-wc-settings-page.php#L66
 				$notice = sprintf(
 					/* translators: %s: WooCommerce checkout settings URL */
-					__( 'You have to select a gateway configuration on the <a href="%s">WooCommerce checkout settings page</a>.', 'pronamic_ideal' ),
+					__( 'You have to select a gateway configuration on the <a href="%s">WooCommerce checkout settings page</a>.', 'pronamic-pay-woocommerce' ),
 					add_query_arg(
 						[
 							'page'    => 'wc-settings',
@@ -497,6 +555,8 @@ class Gateway extends WC_Payment_Gateway {
 		if ( \did_action( 'woocommerce_subscription_change_payment_method_via_pay_shortcode' ) ) {
 			$payment->set_meta( 'mollie_sequence_type', 'first' );
 
+			$payment->set_meta( 'woocommerce_subscription_change_payment_method', true );
+
 			/**
 			 * Use payment method minimum amount for verification payment.
 			 *
@@ -547,16 +607,28 @@ class Gateway extends WC_Payment_Gateway {
 			throw $exception;
 		}
 
-		// Store payment ID in WooCommerce order meta.
-		$order->update_meta_data( '_pronamic_payment_id', (string) $payment->get_id() );
-
-		$order->save();
+		$this->store_payment_details( $order, $payment );
 
 		// Return results array.
 		return [
 			'result'   => 'success',
 			'redirect' => $payment->get_pay_redirect_url(),
 		];
+	}
+
+	/**
+	 * Store payment details.
+	 *
+	 * @link https://github.com/pronamic/pronamic.shop/issues/53
+	 * @param WC_Order $order   WooCommerce order.
+	 * @param Payment  $payment Pronamic payment.
+	 * @return void
+	 */
+	private function store_payment_details( $order, $payment ) {
+		// Store payment ID in WooCommerce order meta.
+		$order->update_meta_data( '_pronamic_payment_id', (string) $payment->get_id() );
+
+		$order->save();
 	}
 
 	/**
@@ -581,10 +653,10 @@ class Gateway extends WC_Payment_Gateway {
 		// Title.
 		$title = sprintf(
 			/* translators: %s: payment data title */
-			__( 'Payment for %s', 'pronamic_ideal' ),
+			__( 'Payment for %s', 'pronamic-pay-woocommerce' ),
 			sprintf(
 				/* translators: %s: order id */
-				__( 'WooCommerce order %s', 'pronamic_ideal' ),
+				__( 'WooCommerce order %s', 'pronamic-pay-woocommerce' ),
 				$order->get_order_number()
 			)
 		);
@@ -705,30 +777,7 @@ class Gateway extends WC_Payment_Gateway {
 
 		$payment->set_meta( 'woocommerce_order_id', $order->get_id() );
 
-		/*
-		 * An '#' character can result in the following iDEAL error:
-		 * code             = SO1000
-		 * message          = Failure in system
-		 * detail           = System generating error: issuer
-		 * consumer_message = Paying with iDEAL is not possible. Please try again later or pay another way.
-		 *
-		 * Or in case of Sisow:
-		 * <errorresponse xmlns="https://www.sisow.nl/Sisow/REST" version="1.0.0">
-		 *     <error>
-		 *         <errorcode>TA3230</errorcode>
-		 *         <errormessage>No purchaseid</errormessage>
-		 *     </error>
-		 * </errorresponse>
-		 *
-		 * @link http://wcdocs.woothemes.com/user-guide/extensions/functionality/sequential-order-numbers/#add-compatibility
-		 *
-		 * @see page 30 http://pronamic.nl/wp-content/uploads/2012/09/iDEAL-Merchant-Integratie-Gids-NL.pdf
-		 *
-		 * The use of characters that are not listed above will not lead to a refusal of a batch or post, but the
-		 * character will be changed by Equens (formerly Interpay) to a space, question mark or asterisk. The
-		 * same goes for diacritical characters (à, ç, ô, ü, ý etcetera).
-		 */
-		$payment->order_id = str_replace( '#', '', $order->get_order_number() );
+		$payment->order_id = $order->get_order_number();
 
 		$payment->title = $title;
 
@@ -805,7 +854,7 @@ class Gateway extends WC_Payment_Gateway {
 			return $pronamic_subscriptions;
 		}
 
-		$woocommerce_subscriptions = \wcs_get_subscriptions_for_order( $order );
+		$woocommerce_subscriptions = \wcs_get_subscriptions_for_order( $order, [ 'order_type' => 'any' ] );
 
 		foreach ( $woocommerce_subscriptions as $woocommerce_subscription ) {
 			// Added by Knit Pay. Don't create subscription if manual payment option is on.
@@ -873,6 +922,10 @@ class Gateway extends WC_Payment_Gateway {
 		$payment->set_meta( 'mollie_sequence_type', 'recurring' );
 
 		Plugin::start_payment( $payment );
+
+		$order->set_status( WooCommerce::ORDER_STATUS_ON_HOLD );
+
+		$this->store_payment_details( $order, $payment );
 	}
 
 	/**
@@ -946,7 +999,7 @@ class Gateway extends WC_Payment_Gateway {
 		if ( null === $gateway ) {
 			return new \WP_Error(
 				'pronamic-pay-woocommerce-refund-gateway',
-				__( 'Unable to process refund as gateway configuration does not exist.', 'pronamic_ideal' )
+				__( 'Unable to process refund as gateway configuration does not exist.', 'pronamic-pay-woocommerce' )
 			);
 		}
 
@@ -962,7 +1015,7 @@ class Gateway extends WC_Payment_Gateway {
 		if ( null === $payment ) {
 			return new \WP_Error(
 				'pronamic-pay-woocommerce-refund-payment',
-				\__( 'Cannot process refund because payment could not be found.', 'pronamic_ideal' )
+				\__( 'Cannot process refund because payment could not be found.', 'pronamic-pay-woocommerce' )
 			);
 		}
 
@@ -1023,7 +1076,7 @@ class Gateway extends WC_Payment_Gateway {
 
 			$note = \sprintf(
 				/* translators: 1: formatted refund amount, 2: refund gateway reference */
-				\__( 'Created refund of %1$s with reference `%2$s`.', 'pronamic_ideal' ),
+				\__( 'Created refund of %1$s with reference `%2$s`.', 'pronamic-pay-woocommerce' ),
 				\esc_html( $amount->format_i18n() ),
 				\esc_html( $refund->psp_id )
 			);
@@ -1085,6 +1138,10 @@ class Gateway extends WC_Payment_Gateway {
 
 					case 'pronamic_pay_gender':
 						return '1' !== get_option( 'pronamic_pay_woocommerce_gender_field_enable' );
+				}
+
+				if ( \str_contains( $field->get_id(), 'ideal' ) && \str_contains( $field->get_id(), 'issuer' ) ) {
+					return 'yes' === $this->get_pronamic_option( 'show_ideal_issuers' );
 				}
 
 				return true;
@@ -1171,7 +1228,7 @@ class Gateway extends WC_Payment_Gateway {
 			if ( empty( $input_value ) ) {
 				$error = sprintf(
 					/* translators: %s: payment method title */
-					__( 'A required field for the %s payment method is empty.', 'pronamic_ideal' ),
+					__( 'A required field for the %s payment method is empty.', 'pronamic-pay-woocommerce' ),
 					$this->method_title
 				);
 

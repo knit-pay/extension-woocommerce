@@ -3,7 +3,7 @@
  * Payment method type
  *
  * @author    Pronamic <info@pronamic.eu>
- * @copyright 2005-2023 Pronamic
+ * @copyright 2005-2025 Pronamic
  * @license   GPL-3.0-or-later
  * @package   Pronamic\WordPress\Pay\Extensions\WooCommerce
  */
@@ -17,7 +17,7 @@ use Pronamic\WordPress\Pay\Core\Util;
 /**
  * Title: WooCommerce payment method type
  * Description:
- * Copyright: 2005-2021 Pronamic
+ * Copyright: 2005-2025 Pronamic
  * Company: Pronamic
  *
  * @link https://github.com/woocommerce/woocommerce/blob/3.5.3/includes/abstracts/abstract-wc-payment-gateway.php
@@ -135,8 +135,8 @@ class PaymentMethodType extends AbstractPaymentMethodType {
 		if ( null !== $this->payment_method ) {
 			$order_button_label = sprintf(
 				/* translators: %s: payment method title */
-				__( 'Proceed to %s', 'pronamic_ideal' ),
-				PaymentMethods::get_name( $this->payment_method, __( 'Pronamic', 'pronamic_ideal' ) )
+				__( 'Proceed to %s', 'pronamic-pay-woocommerce' ),
+				PaymentMethods::get_name( $this->payment_method, __( 'Pronamic', 'pronamic-pay-woocommerce' ) )
 			);
 		}
 

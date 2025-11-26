@@ -7,6 +7,92 @@ This projects adheres to [Semantic Versioning](http://semver.org/) and [Keep a C
 ## [Unreleased][unreleased]
 -
 
+## [4.12.1] - 2025-06-19
+
+### Commits
+
+- Allow Jetpack autloader 3, 4 and 5 ([616bab1](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/616bab17d9bde445debbe8005abfdec38286bdac))
+
+### Composer
+
+- Changed `automattic/jetpack-autoloader` from `^3.0` to `v5.0.7`.
+	Release notes: https://github.com/Automattic/jetpack-autoloader/releases/tag/v5.0.7
+
+Full set of changes: [`4.12.0...4.12.1`][4.12.1]
+
+[4.12.1]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.12.0...v4.12.1
+
+## [4.12.0] - 2025-06-19
+
+### Changed
+
+- Make sure we retrieve the subscriptions from all order types. ([59949da](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/59949daf471e71575e78f3e221ad727bee803185))
+- Set meta `woocommerce_subscription_change_payment_method` on payment method changes for use in payment status updates (https://github.com/pronamic/pronamic.shop/issues/56). ([e169207](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/e169207a56f073909b9b2b377f863e56ac1ebaba))
+- Added `wp-slug` in composer.json. ([d30bd18](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/d30bd18e1c5c8037c4e789986847c166fb117df3))
+
+### Composer
+
+- Changed `wp-pay/core` from `^4.19` to `v4.26.0`.
+	Release notes: https://github.com/pronamic/wp-pay-core/releases/tag/v4.26.0
+
+Full set of changes: [`4.11.0...4.12.0`][4.12.0]
+
+[4.12.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.11.0...v4.12.0
+
+## [4.11.0] - 2025-02-14
+
+### Commits
+
+- Improved loading translations. ([2f4b2a9](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/2f4b2a9359cb7337067b0e0f6f18303e65df559f))
+- Set order status on hold when processing scheduled subscription payment. ([bedd1fa](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/bedd1fabefe3c816952fa81d33fb9d5a386647c3))
+
+Full set of changes: [`4.10.0...4.11.0`][4.11.0]
+
+[4.11.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.10.0...v4.11.0
+
+## [4.10.0] - 2024-12-16
+
+### Added
+
+- Added setting "Show iDEAL issuers", since the launch of the new iDEAL 2.0 platform, it is recommended to no longer show the iDEAL issuer selection field on the WooCommerce checkout form.
+
+### Changed
+
+- Orders paid via the direct debit (SEPA) payment method will now have the status 'on-hold' instead of 'pending'. This status ensures that customers cannot (re)pay for the order during the direct debit, which can take several days to process.
+
+Full set of changes: [`4.9.1...4.10.0`][4.10.0]
+
+[4.10.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.9.1...v4.10.0
+
+## [4.9.1] - 2024-06-19
+
+### Commits
+
+- No longer use inline <style>-element. ([d014181](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/d0141814cb4b4f453edff3bc64a58abc71470fbe))
+- Removed sanitize order ID logic for Sisow. ([b24e733](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/b24e733553437510016ef46b50aeaeb85d483af1))
+
+Full set of changes: [`4.9.0...4.9.1`][4.9.1]
+
+[4.9.1]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.9.0...v4.9.1
+
+## [4.9.0] - 2024-06-07
+
+### Commits
+
+- Added `{payment_lines_name}` tag to description (https://github.com/pronamic/pronamic-pay/issues/100). ([ee9eec2](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/ee9eec263a370a754696afee833331a299717ff2))
+- No longer use Composer bin plugin. ([34c4da1](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/34c4da1cccc6f9027fe7067b7a1212dda58743fc))
+- Also store Pronamic payment ID in WooCommerce order for subscriptions payments. ([7caf7df](https://github.com/pronamic/wp-pronamic-pay-woocommerce/commit/7caf7dfb892091d40f24c136a3dd8b296cb41ebc))
+
+### Composer
+
+- Changed `php` from `>=8.0` to `>=8.1`.
+- Changed `wp-pay/core` from `^4.16` to `v4.19.0`.
+	Release notes: https://github.com/pronamic/wp-pay-core/releases/tag/v4.19.0
+
+Full set of changes: [`4.8.0...4.9.0`][4.9.0]
+
+[4.9.0]: https://github.com/pronamic/wp-pronamic-pay-woocommerce/compare/v4.8.0...v4.9.0
+
 ## [4.8.0] - 2024-03-26
 
 ### Changed
