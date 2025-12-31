@@ -140,7 +140,6 @@ class Gateway extends WC_Payment_Gateway {
 		/* temporarily Commented by Knit Pay to remove Proceed to Credit Card for razorpay subscription.
 		if ( null !== $this->payment_method ) {
 			$this->order_button_text = sprintf(
-				/* translators: %s: payment method title */
 				__( 'Proceed to %s', 'pronamic-pay-woocommerce' ),
 				PaymentMethods::get_name( $this->payment_method, __( 'Knit Pay', 'pronamic-pay-woocommerce' ) )
 			);
