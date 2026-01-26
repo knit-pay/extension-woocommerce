@@ -283,7 +283,7 @@ class Gateway extends WC_Payment_Gateway {
 				),
 
 			);
-			  return;
+			return;
 		}
 
 		$icon_display = $this->get_pronamic_option( 'icon_display' );

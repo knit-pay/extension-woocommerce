@@ -239,7 +239,7 @@ class Extension extends AbstractPluginIntegration {
 				'payment_method'     => $payment_method->get_id(),
 				'icon_path'          => \array_key_exists( 'woocommerce', $payment_method->images ) ? $payment_method->images['woocommerce'] : '',
 				'method_description' => \array_key_exists( 'default', $payment_method->descriptions ) ? $payment_method->descriptions['default'] : '',
-				'check_active'       => ! \in_array(
+				/*'check_active'       => ! \in_array(
 					$payment_method->get_id(),
 					[
 						PaymentMethods::BANCONTACT,
@@ -250,7 +250,7 @@ class Extension extends AbstractPluginIntegration {
 						PaymentMethods::IDEAL,
 					],
 					true
-				),
+				),*/ // Commented by Knit Pay because we want to show all payment methods in settings if method is not active.
 				'form_fields'        => [
 					'description' => [
 						'default' => \array_key_exists( 'customer', $payment_method->descriptions ) ? $payment_method->descriptions['customer'] : '',
